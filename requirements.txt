@@ -3,4 +3,5 @@ djongo
 pymongo==3.12.3
 dnspython
 pytz
+ipykernel
 git+https://github.com/botswana-harvard/edc-constants.git@develop#egg=edc_constants
