@@ -1,9 +1,10 @@
 from django.db import models
 
-from tsepamo.models.record_id_model_mixin import RecordIDModelMixin
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class TsepamoTwo(RecordIDModelMixin, models.Model):
+class TsepamoTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+
     site = models.CharField(
         verbose_name="Delivery Site",
         max_length=2,

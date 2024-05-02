@@ -1,9 +1,9 @@
 from django.db import models
-from .model_mixins.complete_field_mixin import CompleteFieldMixin
-from .model_mixins.record_id_model_mixin import RecordIDModelMixin
+
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class PersonalIdentifiersThree(RecordIDModelMixin,CompleteFieldMixin, models.Model):
+class PersonalIdentifiersThree(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
 
     hivneg_pi = models.CharField(
         verbose_name="Is this woman HIV-positive?",
@@ -97,7 +97,6 @@ class PersonalIdentifiersThree(RecordIDModelMixin,CompleteFieldMixin, models.Mod
         null=True,
         help_text="any clarifications or information that may be helpful ",
     )
-
 
     class Meta:
         app_label = 'tsepamo'

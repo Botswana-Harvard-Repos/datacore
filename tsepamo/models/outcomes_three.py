@@ -1,9 +1,10 @@
-from .model_mixins.complete_field_mixin import CompleteFieldMixin
-from .model_mixins.record_id_model_mixin import RecordIDModelMixin
-from .model_mixins.outcomes_model_mixin import OutcomesModelMixin
 
-class OutcomesThree(OutcomesModelMixin,RecordIDModelMixin,
-                    CompleteFieldMixin):
+from .model_mixins import (CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin,
+                           OutcomesModelMixin)
+
+
+class OutcomesThree(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+                    OutcomesModelMixin):
 
     class Meta:
         app_label = 'tsepamo'

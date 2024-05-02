@@ -1,9 +1,9 @@
 from django.db import models
-from .model_mixins.complete_field_mixin import CompleteFieldMixin
-from .model_mixins.record_id_model_mixin import RecordIDModelMixin
+
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class SwitcherIPMSThree(RecordIDModelMixin,CompleteFieldMixin, models.Model):
+class SwitcherIPMSThree(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
 
     ipms_foundv1 = models.CharField(
         verbose_name="Patient's record found in IPMS?",
@@ -165,7 +165,6 @@ class SwitcherIPMSThree(RecordIDModelMixin,CompleteFieldMixin, models.Model):
         null=True,
         help_text="",
     )
-
 
     class Meta:
         app_label = 'tsepamo'

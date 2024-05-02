@@ -1,9 +1,10 @@
 from django.db import models
 
-from tsepamo.models.record_id_model_mixin import RecordIDModelMixin
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class SwitcherIpmsTwo(RecordIDModelMixin, models.Model):
+class SwitcherIpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+
     ipms_foundv1 = models.CharField(
         verbose_name="Patient's record found in IPMS?",
         max_length=1,

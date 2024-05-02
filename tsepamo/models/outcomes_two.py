@@ -1,9 +1,10 @@
 from django.db import models
 
-from tsepamo.models.record_id_model_mixin import RecordIDModelMixin
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class OutcomesTwo(RecordIDModelMixin, models.Model):
+class OutcomesTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+
     mother_name = models.CharField(
         verbose_name="Mother's Name ",
         max_length=100,
