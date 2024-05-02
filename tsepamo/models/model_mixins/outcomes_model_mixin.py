@@ -5,6 +5,7 @@ class OutcomesModelMixin(models.Model):
     mother_name = models.CharField(
     verbose_name="Mother's Name ",
     max_length=100,
+    null=True,
     help_text="", )
 
     mother_omang = models.CharField(
@@ -27,12 +28,14 @@ class OutcomesModelMixin(models.Model):
 
     date_of_delivery = models.DateField(
     verbose_name="Date of Delivery (M-D-Y)",
+    null=True,
     help_text="", )
 
     delivery_site = models.CharField(
     verbose_name="Delivery Site",
     max_length=2,
     choices=(('10', 'Princess Marina'), ('20', 'Nyangabwge'), ('30', 'Molepolole'), ('40', 'Maun'), ('50', 'Ghanzi'), ('60', 'Selebi Phikwe'), ('70', 'Serowe'), ('80', 'Mahalapye'), ('90', 'Bamalete Lutheran Hospital'), ('11', 'Palapye Primary Hospital'), ('12', 'Deborah Retief Hospaital'), ('13', 'Kanye SDA Hospital'), ('14', 'Athlone Hospital'), ('15', 'Bobonong Primary Hospital'), ('16', 'Gumare Primary Hospital'), ('17', 'Goodhope Primary Hospital'), ('18', 'Tutume Primary Hospital'), ('19', 'Letlhakane Primary Hospital')),
+    null=True,
     help_text="", )
 
     anc_clinic = models.CharField(
@@ -45,6 +48,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Infant Status (at birth)",
     max_length=1,
     choices=(('1', 'alive at discharge'), ('2', 'unknown')),
+    null=True,
     help_text="", )
 
     ca_diagnosis = models.CharField(
@@ -57,16 +61,19 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Did the mother consent to a follow-up call?",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     overall_status = models.TextField(
     verbose_name="How are you doing? How is the child?",
+    null=True,
     help_text="Please remember to ask about developmental milestones for children who are alive", )
 
     child_status_phonecall = models.CharField(
     verbose_name="Child Current Status (per parent report or chart)",
     max_length=1,
     choices=(('1', 'alive'), ('2', 'died')),
+    null=True,
     help_text="", )
 
     cause_of_death = models.TextField(
@@ -82,16 +89,19 @@ class OutcomesModelMixin(models.Model):
     parent_reported_diagnosis = models.CharField(
     verbose_name="Child's Diagnosis (per parent report)",
     max_length=100,
+    null=True,
     help_text="", )
 
     diagnosis_explained = models.TextField(
     verbose_name="How was your infant's diagnosis and treatment explained to you? ",
+    null=True,
     help_text="", )
 
     diagnosis_understood = models.CharField(
     verbose_name="Did you feel that you understood your infant's diagnosis?",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     diagnosis_questions = models.TextField(
@@ -108,16 +118,19 @@ class OutcomesModelMixin(models.Model):
 
     supports = models.TextField(
     verbose_name="What supports, if any, were available to you and your infant at the time of their birth? ",
+    null=True,
     help_text="", )
 
     desired_supports = models.TextField(
     verbose_name="What supports would have been helpful for you? ",
+    null=True,
     help_text="", )
 
     medical_intervention = models.CharField(
     verbose_name="Were you offered medical treatment to help your child? ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     medical_tx_describe = models.TextField(
@@ -129,6 +142,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Did your child have surgery? ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     surgery_describe = models.TextField(
@@ -140,6 +154,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Is your child receiving any ongoing additional care (beyond routine care) because of their congenital abnormality/disability?  ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     ongoing_care_describe = models.TextField(
@@ -151,6 +166,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Does your child follow with a specialist (i.e. neurologist, orthopedics)? ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     specialist_type = models.CharField(
@@ -163,6 +179,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Were you offered additional therapies/services (i.e. physical or occupational therapy) to help your child? ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     therapies_describe = models.TextField(
@@ -174,6 +191,7 @@ class OutcomesModelMixin(models.Model):
     verbose_name="Were you offered financial support to help deal with medical expenses related to your child's diagnosis? ",
     max_length=1,
     choices=(('1', 'Yes'), ('0', 'No')),
+    null=True,
     help_text="", )
 
     financial_services_describe = models.TextField(
@@ -183,6 +201,7 @@ class OutcomesModelMixin(models.Model):
 
     disability_social = models.TextField(
     verbose_name="What has been your experience in your community raising a child with a disability? ",
+    null=True,
     help_text="", )
 
     questions_for_team = models.TextField(
