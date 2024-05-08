@@ -73,7 +73,7 @@ class TsepamoTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.
         verbose_name="What is the HIV status of the mother whose placenta was collected?",
         max_length=1,
         choices=(
-        ('1', 'HIV-infected'), ('0', 'HIV-uninfected'), ('2', 'Unknown HIV status')),
+            ('1', 'HIV-infected'), ('0', 'HIV-uninfected'), ('2', 'Unknown HIV status')),
         help_text="for placental participants only", )
 
     placenta_infantstat = models.CharField(
