@@ -6,10 +6,11 @@ from django.db.models import (DateTimeField, DateField, IntegerField,
 
 
 class LoadCSVData:
+    
 
     def __init__(self):
         self.data = []
-
+        
     def map_choice_data(self, key, value, record):
         is_choice = key.split('___')
         if len(is_choice) > 1:
@@ -36,28 +37,36 @@ class LoadCSVData:
                 self.data.append(record)
         return self.data
 
-    def load_model_data(self, data, model_name):
-        model_cls = django_apps.get_model(model_name)
-        model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
-        for record in data:
-            formatted_record = {}
-            for field_name, field in model_fields.items():
-                value = record.get(field_name)
-                if isinstance(field, DateTimeField):
-                    try:
-                        value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
-                    except TypeError:
-                        pass
-                if isinstance(field, DateField):
-                    try:
-                        value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
-                    except TypeError:
-                        pass
-                if isinstance(field, IntegerField):
-                    value = int(value) if value else value
-                if isinstance(field, DecimalField):
-                    value = float(value) if value else value
-                formatted_record[field_name] = None if value == '' else value
+    def load_model_data(self, data, model_names):
+        for model_name in model_names:
+            model_cls = django_apps.get_model(model_name)
+            model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
+            for record in data:
+                formatted_record = {}
+                for field_name, field in model_fields.items():
+                    value = record.get(field_name)
+                    if isinstance(field, DateTimeField):
+                        try:
+                            value = datetime.strptime(value, '%d-%m-%y %H:%M') if value else value
+                        except TypeError:
+                            pass
+                    if isinstance(field, DateField):
+                        try:
+                            value = datetime.strptime(value, '%d-%m-%y').date() if value else value
+                        except TypeError:
+                            pass
+                    if isinstance(field, IntegerField):
+                        value = int(value) if value else value
+                    if isinstance(field, DecimalField):
+                        value = float(value) if value else value
+                    formatted_record[field_name] = None if value == '' else value
 
-            model_cls.objects.update_or_create(
-                record_id=record.get('record_id'), defaults=formatted_record)
+                model_cls.objects.update_or_create(
+                    record_id=record.get('record_id'), defaults=formatted_record)
+
+    def load_model_data_all(self,csv_files):
+        for csv_file,model_names in csv_files:
+            data = self.read_csv_data(csv_file)
+            self.load_model_data(data,model_names)
+
+
