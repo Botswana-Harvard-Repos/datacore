@@ -9,3 +9,7 @@ from .ipms_two import IpmsTwo
 from .tsepamo_two import TsepamoTwo
 from .tsepamo_one import TsepamoOne
 from .outcomes_one import OutcomesOne
+from .tsepamo_four import TsepamoFour
+from .outcomes_four import OutcomesFour
+from .personal_identifiers_four import PersonalIdentifiersFour
+from .switcher_ipms_four import SwitcherIpmsFour
