@@ -27,7 +27,8 @@ SECRET_KEY = 'django-insecure-vdm8v(v#esw$y2$iqt_8&6p$o+^299f!srgo3yj^_@n1%a#x&d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','datacore.bhp.org.bw']
+
 
 # Application definition
 
@@ -119,3 +120,10 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+
+CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1','https://localhost']
