@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from utils import LoadCSVData
+from tsepamo.utils import LoadCSVData
 
 
 class Command(BaseCommand):
