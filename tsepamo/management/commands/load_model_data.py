@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from tsepamo.tasks import run_load_model_data_task
+from tsepamo.utils import LoadCSVData
 
 
 class Command(BaseCommand):
