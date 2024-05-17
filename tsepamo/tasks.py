@@ -1,7 +1,4 @@
-from celery import shared_task,current_task
-from django.core.management import call_command
-import logging
-logger = logging.getLogger(__name__)
+from celery import shared_task
 from tsepamo.utils import LoadCSVData
 
 @shared_task(bind=True)
@@ -13,14 +10,6 @@ def run_load_model_data_task(self):
     try:
         tsepamo_data = LoadCSVData()
         tsepamo_data.load_model_data_all(csv_files)
-
-        current_task.update_state(
-            state='PROGRESS',
-            meta={'current': 1, 'total': 1} 
-        )
-        result = "Data loading completed successfully"
-        return {'result': result}
     except Exception as exc:
-        logger.exception("An error occured during loading data")
         raise exc
     
