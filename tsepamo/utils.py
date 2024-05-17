@@ -4,9 +4,11 @@ from decimal import Decimal
 from django.apps import apps as django_apps
 from django.db.models import (DateTimeField, DateField, IntegerField,
                               DecimalField)
-
+import logging
+logger = logging.getLogger('celery_progress')
 
 class LoadCSVData:
+    
     def __init__(self):
         self.data = []
 
@@ -38,6 +40,7 @@ class LoadCSVData:
 
     def load_model_data(self, data, model_names):
         for model_name in model_names:
+            logger.debug("Model:",model_name)
             model_cls = django_apps.get_model(model_name)
             model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
 
@@ -71,6 +74,8 @@ class LoadCSVData:
                     create_record = formatted_record.copy()
                     create_record.update(record_id=record.get('record_id'))
                     model_cls.objects.create(**create_record)
+                    logger.debug("Created Record",record.get('record_id'))
+                
 
     def load_model_data_all(self, csv_files):
         for csv_file, model_names in csv_files:
