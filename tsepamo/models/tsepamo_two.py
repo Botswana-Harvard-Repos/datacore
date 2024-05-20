@@ -64,9 +64,8 @@ class TsepamoTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.
         blank=True, null=True,
         help_text="", )
 
-    placenta_id = models.DecimalField(
+    placenta_id = models.PositiveIntegerField(
         verbose_name="Placental ID: (this is the Tsepamo BID WITHOUT the first two numbers--site code (10))",
-        decimal_places=2, max_digits=8,
         help_text="", )
 
     placenta_hiv = models.CharField(
