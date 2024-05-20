@@ -73,8 +73,8 @@ class LoadCSVData:
                 # else:
                     create_record = formatted_record.copy()
                     create_record.update(record_id=record.get('record_id'))
-                    model_cls.objects.create(**create_record)
-                    logger.debug("Created Record",record.get('record_id'))
+                    logger.debug("Create Record",record.get('record_id'))
+                    model_cls.objects.create(**create_record)            
                 
 
     def load_model_data_all(self, csv_files):
