@@ -7,8 +7,8 @@ from django.db.models import (DateTimeField, DateField, IntegerField,
 import logging
 logger = logging.getLogger('celery_progress')
 
+
 class LoadCSVData:
-    
     def __init__(self):
         self.data = []
 

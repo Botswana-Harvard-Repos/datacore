@@ -1,0 +1,27 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>{% block title %}Login - Datacore{% endblock %}</title>
+	    <!-- Include MDB CSS -->
+	    <link href="{% static 'mdb5/css/mdb.min.css' %}" rel="stylesheet" type="text/css"/>
+	    <!-- Google Fonts -->
+	  	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+	</head>
+	<body>
+		<!-- Content -->
+	    <div class="container mt-5">
+	        {% block content %}
+	        <!-- Default content -->
+	        {% endblock %}
+	    </div>
+	 
+	 	{% block custom-js %}
+		 	<!-- Include MDB JavaScript -->
+			<script src="{% static 'mdb5/js/mdb.umd.min.js' %}"></script>
+		{% endblock custom-js %}
+	</body>
+</html>

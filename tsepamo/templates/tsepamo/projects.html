@@ -1,0 +1,166 @@
+<!-- export_report.html -->
+
+{% extends 'datacore/base.html' %}
+{% load tsepamo_extras %}
+
+{% block breadcumb-nav %}
+	<nav data-mdb-navbar-init class="navbar navbar-expand-lg bg-body-tertiary">
+	  <div class="container-fluid">
+	    <nav aria-label="breadcrumb">
+	      <ol class="breadcrumb">
+	        <li class="breadcrumb-item"><a href="#">Projects</a></li>
+	        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+	      </ol>
+	    </nav>
+	  </div>
+	</nav>
+{% endblock %}
+
+{% block content %}
+	<div class="row gy-5">
+		<div class="col-md-4">
+			<button type="button" class="btn btn-primary btn-rounded text-white" id="exportButton" data-mdb-ripple-init data-mdb-modal-init data-mdb-target="#exportModal">
+				<i class="fa-solid fa-file-export me-2"></i> Export
+			</button>
+		</div>
+
+		<div class="card">
+			<div class="card-header">Project List</div>
+			<div class="card-body">
+			    {% render_datatable data_url="tsepamo:projects-details" columns=table_columns table_id="projectsList" %}
+			</div>
+		</div>
+	</div>
+	
+	<!-- Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="exportModalLabel">Export Selected</h6>
+                    <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="btn-group mb-3 mx-2">
+                    	<button type="button" class="btn btn-secondary">Select Projects</button>
+                        <button class="btn btn-secondary dropdown-toggle dropdown-toggle-split"
+                        		type="button"
+                        		data-mdb-dropdown-init
+				    			data-mdb-ripple-init
+				    			data-mdb-auto-close="false"
+                        		aria-expanded="false">
+                        		<span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu p-2 dropdown-checkboxes" aria-labelledby="projectsDropdown" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Options will be populated here -->
+                        </ul>
+                    </div>
+                    <div class="table-responsive px-2">
+                    	<table id="modalTable" class="table caption-top align-middle mb-0 bg-white">
+	                    	<caption class="p-3 mb-2 bg-light" style="border-radius:2%">
+							    Projects
+							</caption>
+	                        <thead class="bg-light">
+	                            <tr>
+	                            	{% for column in table_columns %}
+                                        <th>{{ column.title }}</th>
+                                    {% endfor %}
+	                            </tr>
+	                        </thead>
+	                        <tbody>
+	                            <!-- Selected items will be appended here -->
+	                        </tbody>
+	                    </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-ripple-init data-mdb-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="modalExportBtn" data-mdb-ripple-init>Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom-js %}
+	{{ block.super }}
+	<script>
+	 	$(document).ready(function() {
+            
+         	// Handle click on "export" button
+            $('#exportButton').on('click', function() {
+            	var table = window['projectsList_table']; // Access the DataTable instance
+            	var selectedItems = [];
+                table.$('input[type="checkbox"]:checked').each(function() {
+                    var data = table.row($(this).closest('tr')).data();
+                    selectedItems.push(data);
+                });
+
+                // Populate the modal table with selected items
+                var modalTableBody = $('#modalTable tbody');
+                modalTableBody.empty();
+                selectedItems.forEach(function(item) {
+                	var rowHtml = '<tr>';
+                	{% for column in table_columns %}
+	                    rowHtml += '<td>' + item['{{ column.data }}'] + '</td>';
+	                {% endfor %}
+	                rowHtml += '</tr>';
+                    modalTableBody.append(rowHtml);
+               });
+                
+               // Populate the dropdown checkboxes
+               var dropdownMenu = $('.dropdown-checkboxes');
+               dropdownMenu.empty();
+               selectedItems.forEach(function(item) {
+                   dropdownMenu.append(`
+                       <li>
+                           <div class="form-check">
+                               <input class="form-check-input dropdown-checkbox" type="checkbox" value="${item.name}" id="checkbox-${item.name}" checked>
+                               <label class="form-check-label" for="checkbox-${item.name}">
+                                   ${item.verbose_name}
+                               </label>
+                           </div>
+                       </li>
+                   `);
+               });
+ 
+               // Handle changes in the dropdown checkboxes
+               $(document).on('change', '.dropdown-checkbox', function() {
+            	   var table = window['projectsList_table']; // Access the DataTable instance
+                   var selectedOptions = $('.dropdown-checkbox:checked').map(function() {
+                       return $(this).val();
+                   }).get();
+
+                   var modalTableBody = $('#modalTable tbody');
+                   modalTableBody.empty();
+
+                   selectedOptions.forEach(function(option) {
+                       var data = table.row(function (idx, data, node) {
+                           return data.name === option;
+                       }).data();
+                       if (data) {
+                    	   var rowHtml = '<tr>';
+                           {% for column in table_columns %}
+                               rowHtml += '<td>' + data['{{ column.data }}'] + '</td>';
+                           {% endfor %}
+                           rowHtml += '</tr>';
+                    	   modalTableBody.append(rowHtml);
+                       }
+                   });
+               });
+
+            });
+         	
+         	// Handle click on "modal-export" button
+            $('#modalExportBtn').on('click', function() {
+                var selectedProjectNames = $('.dropdown-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                // Redirect to the export page with selected project Name
+                var url = "{% url 'tsepamo:export-reports' 'placeholder_name' %}".replace('placeholder_name', selectedProjectNames.join(','));
+                window.location.href = url;
+            });
+	 	});
+	</script>
+{% endblock %}

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Celerybeat Db
+celerybeat-schedule.db
+
 # C extensions
 *.so
 
@@ -10,6 +13,7 @@ __pycache__/
 .DS_Store
 .pydevproject
 .project
+.python-version
 .Python
 build/
 develop-eggs/

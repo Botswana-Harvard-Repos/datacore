@@ -1,0 +1,82 @@
+<!-- export_report.html -->
+
+{% extends 'datacore/base.html' %}
+{% load tsepamo_extras %}
+
+{% block breadcumb-nav %}
+	<nav data-mdb-navbar-init class="navbar navbar-expand-lg bg-body-tertiary">
+	  <div class="container-fluid">
+	    <nav aria-label="breadcrumb">
+	      <ol class="breadcrumb">
+	        <li class="breadcrumb-item"><a href="#">Projects</a></li>
+	        <li class="breadcrumb-item"><a href="#">Exports</a></li>
+	      </ol>
+	    </nav>
+	  </div>
+	</nav>
+{% endblock %}
+
+{% block content %}
+	<div class="row gy-3">
+		<div class="d-flex align-items-start">
+			<div class="col">
+				<div class="form-outline" data-mdb-input-init>
+				  	<input type="text" id="exportName" class="form-control" />
+				  	<label class="form-label" for="form12">Export Name</label>
+				</div>
+			</div>
+			<div class="col">
+				<div class="dropdown mx-5">
+				  <a
+				    class="btn btn-outline-primary dropdown-toggle"
+				    href="#"
+				    role="button"
+				    id="exportTypeLink"
+				    data-mdb-dropdown-init
+				    data-mdb-ripple-init
+				    aria-expanded="false"
+				  >
+				    Export Type
+				  </a>
+				
+				  <ul class="dropdown-menu" aria-labelledby="exportTypeLink">
+				    <li><a class="dropdown-item" href="#">CSV</a></li>
+				    <li><a class="dropdown-item" href="#">Excel</a></li>
+				  </ul>
+				</div>
+			</div>
+		</div>
+		<div>
+			<ul class="nav nav-tabs" id="exportTabs" role="tablist">
+			{% for data_item in data %}
+		           <li class="nav-item" role="presentation">
+		               <a 	data-mdb-tab-init
+		               	class="nav-link {% if forloop.first %} active {% endif %}"
+		               	id="{{ data_item.tab_item }}-tab"
+		               	href="#{{ data_item.tab_item }}"
+		               	role="tab"
+		               	aria-controls="{{ data_item.tab_item }}"
+		               	aria-selected="{% if forloop.first %} true {% else %} false {% endif %}">{{ data_item.tab_item|title }}</a>
+		           </li>
+		       {% endfor %}
+		      </ul>
+		      <div class="tab-content" id="exportTabsContent">
+		      	{% for data_item in data %}
+		           <div class="tab-pane fade {% if forloop.first %} show active {% endif %}"
+		           		id="{{ data_item.tab_item }}"
+		           		role="tabpanel"
+		           		aria-labelledby="{{ data_item.tab_item }}-tab">
+						{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
+		           </div>
+		       {% endfor %}
+		      </div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block custom-js %}
+	{{ block.super }}
+	<script>
+		
+	</script>
+{% endblock %}

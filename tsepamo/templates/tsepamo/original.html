@@ -1,0 +1,257 @@
+<!-- export_report.html -->
+
+{% extends 'datacore/base.html' %}
+
+{% block content %}
+	<div class="container">
+		<div class="card">
+			<div class="card-header">Select Instrument</div>
+			<div class="card-body">
+			    <form class="form-inline mb-3" id="instrumentForm">
+			        <div class="form-group mr-2">
+			            <select class="form-control mb-2" id="instrumentSelect">
+			                <option value="">Select Instrument</option>
+			                {% for model in models %}
+			                    <option value="{{ model.model_name }}">{{ model.model_name }}</option>
+			                {% endfor %}
+			            </select>
+			        </div>
+		
+		        	<button type="button" class="btn btn-outline-secondary" id="exportButton">
+						Export
+					</button>
+					<button type="button" class="btn btn-outline-info" id="previewButton">
+						Preview
+					</button>
+			    </form>
+
+			    <div class="row">
+		        	<div class="col-md-6">
+			    		<div class="dropdown">
+					        <button class="btn btn-secondary dropdown-toggle"
+					        		type="button"
+					        		id="fieldDropdown"
+					        		data-toggle="dropdown"
+					        		data-mdb-dropdown-init
+				    				data-mdb-ripple-init
+				    				data-mdb-auto-close="false"
+					        		aria-expanded="false">
+					            <span id="dropdownButtonText">Select Fields</span>
+					            <span id="dropdownButtonSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+					        </button>
+			        		<div class="dropdown-menu p-2" id="fields-dropdown" aria-labelledby="fieldDropdown" style="max-height: 200px; overflow-y: auto;">
+			           			<input type="text" id="fieldSearch" class="form-control my-2" placeholder="Search fields...">
+					            <div class="form-check">
+					                <input class="form-check-input" type="checkbox" id="selectAllFields" name="selectAllFields">
+					                <label class="form-check-label" for="selectAllFields">Select All Fields</label>
+					            </div>
+					            <div class="dropdown-divider"></div>
+					            <div id="fieldsContainer" class="mt-2">
+					                <!-- Fields will be dynamically displayed here -->
+					            </div>  
+			        		</div>
+			       		</div>
+			       	</div>
+		       		<div class="col-md-6">
+			            <h6 class="bg-body-tertiary p-2 border-top border-bottom">Selected Fields</h6>
+			            <ol id="selectedFieldsList" class="list-group list-group-light list-group-small list-group-numbered" style="max-height: 200px; overflow-y: auto;">
+			                <!-- Selected fields will be displayed here -->
+			            </ol>
+			        </div>
+			    </div>
+			</div>
+		</div>
+		
+		<div id="dataTableContainer" class="mt-4">
+	        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+	            <thead>
+	                <!-- Table headers will be dynamically generated -->
+	            </thead>
+	            <tbody>
+	                <!-- Data rows will be dynamically generated -->
+	            </tbody>
+	        </table>
+	    </div>
+
+	</div>
+{% endblock %}
+
+{% block custom-js %}
+	{{ block.super }}
+	<script>
+	    document.getElementById('instrumentSelect').addEventListener('change', function() {
+	        var projectName = this.value;
+	        console.log(projectName);
+	        if (projectName) {
+
+	        	// Display loader on dropdown button
+            	document.getElementById('dropdownButtonText').classList.add('d-none');
+            	document.getElementById('dropdownButtonSpinner').classList.remove('d-none');
+
+	            fetch(`/tsepamo/api/projects/${projectName}/fields/`)
+	            .then(response => response.json())
+	            .then(data => {
+	                var fieldsContainer = document.getElementById('fieldsContainer');
+	                fieldsContainer.innerHTML = '<div class="dropdown-divider"></div>';
+	                data.forEach(field => {
+	                	fieldsContainer.innerHTML += `
+	                        <div class="form-check">
+	                            <input class="form-check-input field-checkbox" type="checkbox" id="field${field.name}" name="fields" value="${field.name}">
+	                            <label class="form-check-label" for="field${field.name}">
+	                                ${field.name} "${field.verbose_name}"
+	                            </label>
+	                        </div>
+	                    `;
+	                });
+
+		             // Hide loader and show dropdown button text
+		             document.getElementById('dropdownButtonText').classList.remove('d-none');
+		             document.getElementById('dropdownButtonSpinner').classList.add('d-none');
+	            })
+	            .catch(error => {
+	            	console.error('Error fetching fields:', error);
+	            	// Display error message
+	                document.getElementById('fieldsContainer').innerHTML = '<div class="alert alert-danger" role="alert">Error fetching fields. Please try again later.</div>';
+	                
+	             	// Hide spinner and show dropdown button text
+	                document.getElementById('dropdownButtonText').classList.remove('d-none');
+	                document.getElementById('dropdownButtonSpinner').classList.add('d-none');
+	            });
+	        }
+	    });
+
+	 	// Select all fields checkbox
+	    document.getElementById('selectAllFields').addEventListener('change', function() {
+	    	// JavaScript code for selecting all fields...
+	        var selectedFieldsList = document.getElementById('selectedFieldsList');
+	        if (event.target.checked) {
+	            // If "Select All" checkbox is checked, add all fields to the selected fields list
+	            document.querySelectorAll('.field-checkbox').forEach(function(checkbox) {
+	                if (!checkbox.checked) {
+	                    checkbox.checked = true;
+	                    var fieldId = checkbox.value;
+	                    var existingItem = selectedFieldsList.querySelector(`[data-field-id="${fieldId}"]`);
+	                    if (!existingItem) {
+	                        var listItem = document.createElement('li');
+	                        listItem.className = 'list-group-item';
+	                        listItem.setAttribute('data-field-id', fieldId);
+	                        listItem.textContent = checkbox.nextElementSibling.textContent.trim();
+	                        selectedFieldsList.appendChild(listItem);
+	                    }
+	                }
+	            });
+	        } else {
+	            // If "Select All" checkbox is unchecked, remove all fields from the selected fields list
+	            selectedFieldsList.innerHTML = '';
+	            // Uncheck all individual field checkboxes
+	            document.querySelectorAll('.field-checkbox').forEach(function(checkbox) {
+	                checkbox.checked = false;
+	            });
+	        }
+	    });
+
+	 	// Field search functionality
+	    document.getElementById('fieldSearch').addEventListener('input', function() {
+	        var searchTerm = this.value.toLowerCase();
+	        var fieldLabels = document.querySelectorAll('.form-check-label');
+	        fieldLabels.forEach(label => {
+	            var labelText = label.textContent.toLowerCase();
+	            if (labelText.includes(searchTerm)) {
+	                label.parentNode.style.display = 'block';
+	            } else {
+	                label.parentNode.style.display = 'none';
+	            }
+	        });
+	    });
+
+	    
+	 	// Export button click event handler
+	    document.getElementById('exportButton').addEventListener('click', function() {
+	        var projectName = document.getElementById('instrumentSelect').value;
+	        var selectedFields = Array.from(
+	        		document.querySelectorAll('.field-checkbox:checked')).map(checkbox => checkbox.value);
+	        if (projectName) {
+	            // Redirect to export URL with selected instrument ID
+	            window.location.href = `/tsepamo/api/exports/${projectName}/?fields=${selectedFields.join(',')}`;
+	        } else {
+	            alert('Please select an instrument before exporting.');
+	        }
+	    });
+	 		
+	 	
+	 	// Add event listener to a parent element for event delegation
+	    document.querySelector('#fields-dropdown').addEventListener('change', function(event) {
+	        // Check if the event target is a checkbox with the class .field-checkbox
+	        if (event.target.matches('.field-checkbox')) {
+	            var selectedFieldsList = document.getElementById('selectedFieldsList');
+	            if (event.target.checked) {
+	                // Add selected field to the list if not already present
+	                var fieldId = event.target.value;
+	                var existingItem = selectedFieldsList.querySelector(`[data-field-id="${fieldId}"]`);
+	                if (!existingItem) {
+	                    var listItem = document.createElement('li');
+	                    listItem.className = 'list-group-item text-muted my-0 py-0';
+	                    listItem.setAttribute('data-field-id', fieldId);
+	                    listItem.textContent = event.target.nextElementSibling.textContent.trim();
+	                    selectedFieldsList.appendChild(listItem);
+	                }
+	            } else {
+	                // Remove deselected field from the list
+	                var fieldId = event.target.value;
+	                var selectedFieldItem = selectedFieldsList.querySelector(`[data-field-id="${fieldId}"]`);
+	                if (selectedFieldItem) {
+	                    selectedFieldsList.removeChild(selectedFieldItem);
+	                }
+	            }
+	        }
+	    });
+	 	
+	 	// Preview Data button click event handler
+	 	document.getElementById('previewButton').addEventListener('click', function() {
+	        var selectedFields = Array.from(
+	        		document.querySelectorAll('.field-checkbox:checked')).map(checkbox => checkbox.value);
+	        var projectName = document.getElementById('instrumentSelect').value;
+	        if (selectedFields.length === 0) {
+	            alert('Please select at least one field.');
+	            return;
+	        }
+	        if (!projectName) {
+	            alert('Please select a project.');
+	            return;
+	        }
+
+	     	// Make a request to the backend API endpoint
+	        fetch(`/tsepamo/api/preview/${projectName}/?fields=${selectedFields.join(',')}`)
+	            .then(response => response.json())
+	            .then(data => {
+	                // Clear existing table headers and data
+	                $('#dataTable thead').empty();
+	                $('#dataTable tbody').empty();
+
+	                // Populate table headers
+	                var tableHeaders = Object.keys(data[0]).map(header => `<th>${header}</th>`).join('');
+	                $('#dataTable thead').append(`<tr>${tableHeaders}</tr>`);
+
+	                // Populate table data
+	                data.forEach(row => {
+	                    var rowData = Object.values(row).map(value => `<td>${value}</td>`).join('');
+	                    $('#dataTable tbody').append(`<tr>${rowData}</tr>`);
+	                });
+
+	                // Initialize DataTable
+	                $('#dataTable').DataTable({
+					    paging: false,
+					    scrollCollapse: true,
+					    scrollY: '50vh'
+					});
+	            })
+	            .catch(error => {
+	                console.error('Error fetching preview data:', error);
+	                alert('An error occurred while fetching preview data. Please try again later.');
+	            });
+	    });
+        
+        
+	 	
+	</script>
+{% endblock %}

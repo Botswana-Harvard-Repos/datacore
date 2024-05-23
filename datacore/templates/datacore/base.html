@@ -1,0 +1,174 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1">
+	    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+	    <title>{% block title %} BHHP DataCore {% endblock %}</title>
+	    <!-- Font Awesome -->
+	    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css" />
+	    <!-- Google Fonts -->
+	  	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+	  	<!-- Include MDB CSS -->
+	    <link href="{% static 'mdb5/css/mdb.min.css' %}" rel="stylesheet" type="text/css"/>
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.css' %}" />
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/searchPanes.dataTables.min.css' %}" />
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/select.dataTables.min.css' %}" />
+	   	<!-- Include JQuery -->
+	    <script src="{% static 'datacore/js/jquery.min.js' %}"></script>
+	  	{% block custom-css %}
+	  		<!-- Include custom css -->
+	    	<link href="{% static 'datacore/css/sidebar.css' %}" rel="stylesheet" type="text/css"/>
+	    	<style>
+	    		body, html {
+		            height: 100%;
+		            margin: 0;
+		            background-color: #fff;
+		        }	
+	    	
+	    	</style>
+	  	{% endblock custom-css %}
+	</head>
+	<body>
+		<header>
+			<!-- Sidebar -->
+			<nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white">
+			    <div class="position-sticky">
+			      <div class="list-group list-group-flush mx-3 mt-4">
+			        {% block navbar-links %}
+		        		{% for link in navbar_links %}
+		        			{% if link.dropdown_links %}		
+						        <a
+						          class="list-group-item list-group-item-action py-2 ripple"
+						          data-mdb-collapse-init
+						          data-toggle="collapse"
+						          href="#collapseMenuItem{{ forloop.counter }}"
+						          aria-expanded="true"
+						          aria-controls="collapseMenuItem{{ forloop.counter }}"
+						        >
+						          {% if link.icon %}
+						          	<i class="{{ link.icon }}"></i>
+						          {% endif %}
+						          <span class>{{ link.label }}</span><i id="caret-toggle" class="fa-solid fa-caret-down mt-1"></i>
+						        </a>
+						        <!-- Collapsed content -->
+						        <ul id="collapseMenuItem{{ forloop.counter }}" class="collapse show list-group list-group-flush">
+						        	{% for dropdown_link in link.dropdown_links %}
+						        	<li class="list-group-item py-1">
+						        		{% if dropdown_link.icon %}
+						            		<i class="{{dropdown_link.icon}} mx-2"></i>
+						            	{% endif %}
+						            	<a href="{{ dropdown_link.url }}" class="text-reset">{{ dropdown_link.label }}</a>
+						          	</li>
+						          	{% endfor %}
+						        </ul>
+						     {% else %}
+						     	<li class="list-group-item py-1">
+			                        <a class="nav-link" href="{{ link.url }}">{{ link.label }}</a>
+			                    </li>
+			                 {% endif %}
+			             {% endfor %}
+				     {% endblock %}
+			      </div>
+			    </div>
+			  </nav>
+			  <!-- Sidebar -->
+
+			  <!-- Navbar -->
+			  <nav id="main-navbar" class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+			    <!-- Container wrapper -->
+			    <div class="container-fluid">
+			      <!-- Toggle button -->
+			      <button data-mdb-button-init
+			        class="navbar-toggler"
+			        type="button"
+			        data-mdb-collapse-init
+			        data-mdb-target="#sidebarMenu"
+			        aria-controls="sidebarMenu"
+			        aria-expanded="false"
+			        aria-label="Toggle navigation"
+			      >
+			        <i class="fas fa-bars"></i>
+			      </button>
+			
+			      <!-- Brand -->
+			      <a class="navbar-brand" href="#">
+			      	{% block nav-title %} BHHP DataCore (PO1) {% endblock %}
+			      </a>
+			
+			      <!-- Right links -->
+			      <ul class="navbar-nav ms-auto d-flex flex-row">	
+			        <!-- Avatar -->
+			        {% if user.is_authenticated %}
+			        <li class="nav-item dropdown">
+			          <a
+			            data-mdb-dropdown-init class="nav-link dropdown-toggle hidden-arrow d-flex align-items-center"
+			            href="#"
+			            id="navbarDropdownMenuLink"
+			            role="button"
+			            data-mdb-toggle="dropdown"
+			            aria-expanded="false"
+			          >
+			            <i class="fa-regular fa-circle-user mx-2" style="font-size: 22px"></i><i class="fa-solid fa-caret-down"></i>
+			          </a>
+			          <ul
+			            class="dropdown-menu dropdown-menu-end"
+			            aria-labelledby="navbarDropdownMenuLink"
+			          >
+			            <li><a class="dropdown-item" href="#">My profile</a></li>
+			            <li><a class="dropdown-item" href="#">Settings</a></li>
+			            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+			          </ul>
+			        </li>
+			        {% endif %}
+			      </ul>
+			    </div>
+			    <!-- Container wrapper -->
+			  </nav>
+			  <!-- Navbar -->
+		</header>
+	
+		<!--Main layout (Content)-->
+		{% block main-content %}
+			<main style="margin-top: 58px;">
+				{% block breadcumb-nav %}
+					<!-- If navigation breadcrumb needed -->
+				{% endblock %}
+				<div class="container pt-4 overflow-hidden">
+					{% block content %}
+				    	<!-- Default content -->
+				    {% endblock %}
+				</div>
+			</main>
+		{% endblock %}
+		<!--Main layout-->
+
+		<!--Footer-->
+		<footer class="bg-body-tertiary text-lg-start fixed-bottom">
+			<!-- Grid container -->
+  			<div class="container p-4">{% block footer-links %}{% endblock %}</div>
+  			<!-- Grid container -->
+			
+			<!-- Copyright -->
+			<div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+				© 2024 Copyright: <a class="text-body" href="/">Botswana Harvard Health Partnership</a>
+			</div>
+			<!-- Copyright -->
+		</footer>
+  		<!--Footer-->
+	
+		<!-- Include MDB JavaScript -->
+		<script src="{% static 'mdb5/js/mdb.umd.min.js' %}"></script>
+		
+		<script src="{% static 'datatables/js/datatables.min.js' %}"></script>
+		<script src="{% static 'datatables/js/dataTables.bootstrap5.js' %}"></script>
+		<script src="{% static 'datatables/js/dataTables.searchPanes.min.js' %}"></script>
+		<script src="{% static 'datatables/js/dataTables.select.min.js' %}"></script>
+		{% block custom-js %} <!-- Additional JS --> {% endblock custom-js %}
+	</body>
+</html>
