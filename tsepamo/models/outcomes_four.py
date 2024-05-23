@@ -1,6 +1,6 @@
 from django.db import models
 
-from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
+from .model_mixins import (CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin)
 
 
 class OutcomesFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):

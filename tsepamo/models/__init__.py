@@ -13,3 +13,4 @@ from .tsepamo_four import TsepamoFour
 from .outcomes_four import OutcomesFour
 from .personal_identifiers_four import PersonalIdentifiersFour
 from .switcher_ipms_four import SwitcherIpmsFour
+from .projects import Projects

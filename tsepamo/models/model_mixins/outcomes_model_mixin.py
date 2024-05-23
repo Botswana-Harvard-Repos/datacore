@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class OutcomesModelMixin(models.Model):
 
     mother_name = models.CharField(

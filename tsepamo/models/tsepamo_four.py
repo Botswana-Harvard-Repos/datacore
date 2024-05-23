@@ -3,7 +3,8 @@ from django.db import models
 from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+                  models.Model):
 
     site = models.CharField(
         verbose_name="Delivery Site",
@@ -45,10 +46,8 @@ class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models
         help_text="",
     )
 
-    part_cl_bid = models.DecimalField(
+    part_cl_bid = models.PositiveIntegerField(
         verbose_name="What is the cervical length study number?",
-        decimal_places=2,
-        max_digits=8,
         help_text="Enter the 3 numbers AFTER CL-",
     )
 
@@ -308,10 +307,8 @@ class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models
         help_text="",
     )
 
-    placental_bid = models.DecimalField(
+    placental_bid = models.PositiveIntegerField(
         verbose_name="1.1 Placental ID",
-        decimal_places=2,
-        max_digits=8,
         help_text="",
     )
 
@@ -1884,10 +1881,8 @@ class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models
         help_text="If the viral load is higher than 400, choose NO",
     )
 
-    high_vl = models.DecimalField(
+    high_vl = models.PositiveIntegerField(
         verbose_name="What is the first viral load during pregnancy?",
-        decimal_places=2,
-        max_digits=8,
         help_text="",
     )
 
@@ -1926,10 +1921,8 @@ class TsepamoFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models
         help_text="",
     )
 
-    high_vl2 = models.DecimalField(
+    high_vl2 = models.PositiveIntegerField(
         verbose_name="What is the second viral load during pregnancy?",
-        decimal_places=2,
-        max_digits=8,
         help_text="",
     )
 

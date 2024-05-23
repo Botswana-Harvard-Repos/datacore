@@ -3,7 +3,8 @@ from django.db import models
 from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
 
-class PersonalIdentifiersFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+class PersonalIdentifiersFour(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+                              models.Model):
 
     hivneg_pi = models.CharField(
         verbose_name="Is this woman HIV-positive?",
