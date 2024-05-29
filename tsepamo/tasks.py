@@ -9,7 +9,7 @@ def run_load_model_data_task():
     
     csv_files=[    ('/home/datacore/source/datacore/Tsepamo_1.csv',['tsepamo.tsepamoone','tsepamo.outcomesone']),
                    ('/home/datacore/source/datacore/Tsepamo_2.csv',['tsepamo.tsepamotwo','tsepamo.outcomestwo','tsepamo.switcheripmstwo','tsepamo.personalidentifierstwo','tsepamo.ipmstwo']),
-                   ('/home/datacore/source/datacore/Tsepamo_3.csv',['tsepamo.tsepamothree','tsepamo.outcomesthree','tsepamo.switcheripmsthree','tseoamo.personalidentifiersthree']),
+                   ('/home/datacore/source/datacore/Tsepamo_3.csv',['tsepamo.tsepamothree','tsepamo.outcomesthree','tsepamo.switcheripmsthree','tsepamo.personalidentifiersthree']),
                    ('/home/datacore/source/datacore/Tsepamo_4.csv',['tsepamo.tsepamofour','tsepamo.outcomesfour','tsepamo.switcheripmsfour','tsepamo.personalidentifiersfour'])] 
     try:
         tsepamo_data = LoadCSVData()
