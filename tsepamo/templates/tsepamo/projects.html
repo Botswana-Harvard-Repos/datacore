@@ -8,8 +8,8 @@
 	  <div class="container-fluid">
 	    <nav aria-label="breadcrumb">
 	      <ol class="breadcrumb">
-	        <li class="breadcrumb-item"><a href="#">Projects</a></li>
-	        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+	        <li class="breadcrumb-item"><a href="/dashboard/">Dashboard</a></li>
+	        <li class="breadcrumb-item active" aria-current="page">Projects</li>
 	      </ol>
 	    </nav>
 	  </div>
@@ -18,8 +18,8 @@
 
 {% block content %}
 	<div class="row gy-5">
-		<div class="col-md-4">
-			<button type="button" class="btn btn-primary btn-rounded text-white" id="exportButton" data-mdb-ripple-init data-mdb-modal-init data-mdb-target="#exportModal">
+		<div class="d-flex align-items-center justify-content-start">
+			<button type="button" class="btn btn-primary btn-rounded text-white" id="exportButton" data-mdb-ripple-init data-mdb-modal-init data-mdb-target="#exportModal" disabled>
 				<i class="fa-solid fa-file-export me-2"></i> Export
 			</button>
 		</div>
@@ -160,6 +160,20 @@
                 // Redirect to the export page with selected project Name
                 var url = "{% url 'tsepamo:export-reports' 'placeholder_name' %}".replace('placeholder_name', selectedProjectNames.join(','));
                 window.location.href = url;
+            });
+         	
+         	// Enable export button on projects selection
+         	// Listen for projects checkbox changes or selections.
+            $(document).on('projectsListcheckboxChanged', function(event, selectedNames) {
+            	if (selectedNames.length === 0) {
+                   	$('#exportButton').attr('disabled', true);
+            	}
+ 
+            	if ($('#exportButton').is(':disabled')){
+            		if (selectedNames.length > 0) {
+                    	$('#exportButton').attr('disabled', false);
+                    }
+            	}
             });
 	 	});
 	</script>

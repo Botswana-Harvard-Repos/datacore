@@ -3,13 +3,36 @@
 {% extends 'datacore/base.html' %}
 {% load tsepamo_extras %}
 
+{% block custom-css %}
+ 	{{ block.super }}
+   	<style>
+   		#main-container {
+   			overflow: hidden;		
+   		}
+		.nowrap {
+            white-space: nowrap;
+        }
+        
+        /* Spinner Styles */
+        #spinner-overlay {
+           	position: fixed;
+           	top: 0;
+           	left: 0;
+           	width: 100%;
+           	height: 100%;
+           	background-color: rgba(0, 0, 0, 0.5);
+           	z-index: 9999;
+        }
+   	</style>
+{% endblock custom-css %}
+
 {% block breadcumb-nav %}
-	<nav data-mdb-navbar-init class="navbar navbar-expand-lg bg-body-tertiary">
+	<nav data-mdb-navbar-init class="navbar navbar-expand-lg bg-body-primary">
 	  <div class="container-fluid">
 	    <nav aria-label="breadcrumb">
 	      <ol class="breadcrumb">
-	        <li class="breadcrumb-item"><a href="#">Projects</a></li>
-	        <li class="breadcrumb-item"><a href="#">Exports</a></li>
+	        <li class="breadcrumb-item"><a href="/tsepamo/projects/">Projects</a></li>
+	        <li class="breadcrumb-item active" aria-current="page">Exports</li>
 	      </ol>
 	    </nav>
 	  </div>
@@ -17,7 +40,23 @@
 {% endblock %}
 
 {% block content %}
-	<div class="row gy-3">
+	<div id="spinner-overlay" class="d-flex align-items-center justify-content-center text-center d-none" >
+		<div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+		  <span class="visually-hidden">Loading...</span>
+		</div>
+	</div>
+
+	<div class="row gy-5">
+		<div id="notification" class="alert alert-success alert-dismissible fade show d-none" role="alert">
+			Export is ready! The download will start shortly!
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+
+		<div class="d-flex align-items-center justify-content-end">
+			<button type="button" class="btn btn-primary" id="exportButton" data-mdb-ripple-init>
+				Generate Export <i class="fa-solid fa-file-export ms-2"></i>
+			</button>
+		</div>
 		<div class="d-flex align-items-start">
 			<div class="col">
 				<div class="form-outline" data-mdb-input-init>
@@ -26,12 +65,12 @@
 				</div>
 			</div>
 			<div class="col">
-				<div class="dropdown mx-5">
+				<div class="dropdown mx-5" id="exportTypeDropdown">
 				  <a
 				    class="btn btn-outline-primary dropdown-toggle"
 				    href="#"
 				    role="button"
-				    id="exportTypeLink"
+				    id="exportTypeButton"
 				    data-mdb-dropdown-init
 				    data-mdb-ripple-init
 				    aria-expanded="false"
@@ -39,9 +78,16 @@
 				    Export Type
 				  </a>
 				
-				  <ul class="dropdown-menu" aria-labelledby="exportTypeLink">
-				    <li><a class="dropdown-item" href="#">CSV</a></li>
-				    <li><a class="dropdown-item" href="#">Excel</a></li>
+				  <ul class="dropdown-menu" aria-labelledby="exportTypeButton">
+				  	<label class="dropdown-item">
+                        <input class="form-check-input me-2" type="checkbox" value="csv"> CSV
+                    </label>
+                    <label class="dropdown-item">
+                        <input class="form-check-input me-2" type="checkbox" value="excel"> Excel
+                    </label>
+                    <label class="dropdown-item">
+                        <input class="form-check-input me-2" type="checkbox" value="pdf"> PDF
+                    </label>
 				  </ul>
 				</div>
 			</div>
@@ -56,7 +102,14 @@
 		               	href="#{{ data_item.tab_item }}"
 		               	role="tab"
 		               	aria-controls="{{ data_item.tab_item }}"
-		               	aria-selected="{% if forloop.first %} true {% else %} false {% endif %}">{{ data_item.tab_item|title }}</a>
+		               	aria-selected="{% if forloop.first %} true {% else %} false {% endif %}">
+		               		{{ data_item.tab_item|title }}
+		               		{% if data_item.tab_item == 'fields' %}
+		               			<span class="badge rounded-pill badge-primary ms-3">
+		               				Selected <span id="fieldsCount">0</span>
+		               			</span>
+		               		{% endif %}
+		               	</a>
 		           </li>
 		       {% endfor %}
 		      </ul>
@@ -66,7 +119,15 @@
 		           		id="{{ data_item.tab_item }}"
 		           		role="tabpanel"
 		           		aria-labelledby="{{ data_item.tab_item }}-tab">
-						{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
+		           		<div class="table-responsive-sm">
+		           			{% if data_item.tab_item == 'instruments' %}
+		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True include_seach_panes=False %}
+		           			{% elif data_item.tab_item == 'fields' %}
+		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True allow_select_all=False include_seach_panes=False %}
+		           			{% else %}
+		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
+		           			{% endif %}
+		           		</div>
 		           </div>
 		       {% endfor %}
 		      </div>
@@ -77,6 +138,115 @@
 {% block custom-js %}
 	{{ block.super }}
 	<script>
+		$(document).ready(function() {
+			var fieldsTable = window['fieldsList_table'];
+			var maxSelections = 16384; // limit to the fields that can be selected due to exports columns limit
+
+			function updateSelectedFieldsCount(selectedFieldNames) {
+				var count = selectedFieldNames.length;
+				$('#fieldsCount').text(count);
+				if (count >= maxSelections) {
+                    alert('You have reached the maximum of ' + maxSelections + 'allowable fields. Due to limited allowed excel columns');
+                }
+            }
+
+			// Function to update fields table
+            function updateFieldsTable(selectedNames) {
+                if (selectedNames.length > 0) {
+                    $.ajax({
+                        url: "{% url 'tsepamo:fetch-fields' 'placeholder_names' %}".replace('placeholder_names', selectedNames),
+                        data: {
+                            form_ids: selectedNames.join(',')
+                        },
+                        success: function(data) {
+                            fieldsTable.clear();
+                            fieldsTable.rows.add(data);
+                            fieldsTable.draw();
+                        }
+                    });
+                } else {
+                    fieldsTable.clear().draw();
+                }
+            }
+			
+
+            var selectedInstrumentNames;
+         	// Listen for instruments checkbox changes
+            $(document).on('instrumentsListcheckboxChanged', function(event, selectedNames) {
+                updateFieldsTable(selectedNames);
+                selectedInstrumentNames = selectedNames;
+            });
+
+            var selectedFieldNames = [];
+         	// Add event listener for field checkboxes
+            $(document).on('fieldsListcheckboxChanged', function(event, selectedNames) {
+            	updateSelectedFieldsCount(selectedNames);
+
+            	// Merge the new selections with the existing ones
+                selectedNames.forEach(name => {
+                    if (!selectedFieldNames.includes(name)) {
+                        selectedFieldNames.push(name);
+                    }
+                });
+            	
+             	// Remove deselected fields
+                /* selectedFieldNames = selectedFieldNames.filter(name => selectedNames.includes(name));
+            	console.log(selectedFieldNames); */
+            });
+
+         	// Export button click handler
+            $('#exportButton').click(function() {
+            	// Show loading/spinner
+            	$('#spinner-overlay').removeClass('d-none');
+ 
+                var exportName = $('#exportName').val();
+                if (exportName.length === 0 || exportName === null || exportName === undefined) {
+                	alert('Please specify an export name.');
+                    return;
+                }
+
+                if (selectedFieldNames.length === 0) {
+                    alert('Please select at least one field to export.');
+                    return;
+                }
+
+                var selectedExportTypes = [];
+                $('#exportTypeDropdown .dropdown-item input[type="checkbox"]:checked').each(function() {
+                    selectedExportTypes.push($(this).val());
+                });
+
+                if (selectedExportTypes.length === 0) {
+                    alert('Please select at least one export type.');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'tsepamo:generate-export' %}",
+                    method: 'POST',
+                    data: {
+                        export_name: exportName,
+                        export_type: selectedExportTypes.join(','),
+                        selected_fields: selectedFieldNames.join(','),
+                        selected_instruments: selectedInstrumentNames.join(',')
+                    },
+                    success: function(response) {
+                        // Handle success response
+                        window.location.href = "{% url 'tsepamo:repository' %}";
+                        // Hide spinner
+                        $('#spinner-overlay').addClass('d-none');
+                     	// Show the notification
+                        $('#notification').removeClass('d-none');
+                    },
+                    error: function(error) {
+                        // Handle error response
+                        alert('An error occurred while generating the export. Please contact the administrator.');
+                    	 // Hide the spinner in case of error
+                        $('#spinner-overlay').addClass('d-none');
+                    }
+                });
+            });
+         	
+		});
 		
 	</script>
 {% endblock %}

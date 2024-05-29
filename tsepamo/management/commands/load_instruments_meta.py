@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from ...models import InstrumentsMeta
+from ...models import InstrumentsMeta, Projects
 
 
 class Command(BaseCommand):
@@ -24,6 +24,13 @@ class Command(BaseCommand):
                                        'personalidentifiersfour']}
 
         for project_name, instruments_list in projects_data.items():
+            try:
+                Projects.objects.get(name=project_name)
+            except Projects.DoesNotExist:
+                Projects.objects.create(
+                    name=project_name,
+                    verbose_name=' '.join(project_name.split('_')).capitalize())
+
             for instrument in instruments_list:
                 try:
                     InstrumentsMeta.objects.get(related_project=project_name,

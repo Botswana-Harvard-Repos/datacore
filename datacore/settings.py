@@ -10,7 +10,19 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import sys
+import configparser
 from pathlib import Path
+
+from django.core.management.color import color_style
+
+style = color_style()
+
+SITE_ID = 1
+
+APP_NAME = 'datacore'
+
+ETC_DIR = os.path.join('/etc/', APP_NAME)
 
 LOGGING = {
     'version': 1,
@@ -54,6 +66,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'datacore.bhp.org.bw']
 
+CONFIG_FILE = f'{APP_NAME}.ini'
+
+CONFIG_PATH = os.path.join(ETC_DIR, CONFIG_FILE)
+sys.stdout.write(style.SUCCESS(f'  * Reading config from {CONFIG_FILE}\n'))
+config = configparser.ConfigParser()
+config.read(CONFIG_PATH)
 
 # Application definition
 
@@ -64,9 +82,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
+    'allauth',
+    'allauth.account',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
     'corsheaders',
+    'anymail',
     'authentication.apps.AuthenticationConfig',
     'tsepamo.apps.TsepamoConfig',
     'datacore'
@@ -141,6 +165,40 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Authentication options
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_ADAPTER = 'authentication.adapter.CustomAccountAdapter'
+
+REST_AUTH = {
+    'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
+    'LOGIN_SERIALIZER': 'authentication.serializers.CustomLoginSerializer'}
+
+# Email configurations
+
+EMAIL_BACKEND = 'anymail.backends.postmark.EmailBackend'
+# EMAIL_HOST = config['email_conf'].get('email_host')
+# EMAIL_USE_TLS = config['email_conf'].get('email_use_tls')
+# EMAIL_PORT = config['email_conf'].get('email_port')
+# DEFAULT_FROM_EMAIL = config['email_conf'].get('email_user')
+# EMAIL_HOST_USER = config['email_conf'].get('email_user')
+# EMAIL_HOST_PASSWORD = config['email_conf'].get('email_host_pwd')
+# EMAIL_USE_SSL = False
+
+ANYMAIL = {
+    'POSTMARK_SERVER_TOKEN': '8ed81295-95bd-4929-a2d4-4698cdb33dd3',
+}
+
+DEFAULT_FROM_EMAIL = 'adiphoko@bhp.org.bw'
+EMAIL_PORT = 587
+
+EMAIL_CONFIRM_REDIRECT_BASE_URL = 'http://localhost:8001/email/confirm/'
+
+PASSWORD_RESET_CONFIRM_REDIRECT_BASE_URL = 'http://localhost:8001/password-reset/confirm/'
+
+MERCURY_URL = 'http://127.0.0.1:8000/app/tsepamo'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

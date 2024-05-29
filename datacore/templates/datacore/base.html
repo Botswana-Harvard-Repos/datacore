@@ -19,65 +19,91 @@
 	    <link rel="stylesheet" href="{% static 'datatables/css/searchPanes.dataTables.min.css' %}" />
 	    
 	    <link rel="stylesheet" href="{% static 'datatables/css/select.dataTables.min.css' %}" />
+	    <!-- Include custom css -->
+	    <link href="{% static 'datacore/css/sidebar.css' %}" rel="stylesheet" type="text/css"/>
 	   	<!-- Include JQuery -->
 	    <script src="{% static 'datacore/js/jquery.min.js' %}"></script>
 	  	{% block custom-css %}
-	  		<!-- Include custom css -->
-	    	<link href="{% static 'datacore/css/sidebar.css' %}" rel="stylesheet" type="text/css"/>
+	  		{{block.super}}
 	    	<style>
 	    		body, html {
 		            height: 100%;
 		            margin: 0;
 		            background-color: #fff;
-		        }	
-	    	
+		        }
+		        
+		        .user-badge {
+		            width: 25px;
+		            height: 25px;
+		            display: flex;
+		            align-items: center;
+		            justify-content: center;
+		            border-radius: 50%;
+		            background-color: #343a40; /* MDB dark color */
+		            color: white;
+		            font-size: 0.8em;
+		        }
+		        
+		        .side-nav-item.active {
+				  background-color: #bbcce4 !important;
+				  border-color: #bbcce4;
+				  border-radius: 5px;
+				  color: black;
+				}
+				
+				.breadcrumb-item.active {
+				    color: #849ccc;
+				}
+
 	    	</style>
 	  	{% endblock custom-css %}
 	</head>
 	<body>
 		<header>
-			<!-- Sidebar -->
-			<nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white">
-			    <div class="position-sticky">
-			      <div class="list-group list-group-flush mx-3 mt-4">
-			        {% block navbar-links %}
-		        		{% for link in navbar_links %}
-		        			{% if link.dropdown_links %}		
-						        <a
-						          class="list-group-item list-group-item-action py-2 ripple"
-						          data-mdb-collapse-init
-						          data-toggle="collapse"
-						          href="#collapseMenuItem{{ forloop.counter }}"
-						          aria-expanded="true"
-						          aria-controls="collapseMenuItem{{ forloop.counter }}"
-						        >
-						          {% if link.icon %}
-						          	<i class="{{ link.icon }}"></i>
-						          {% endif %}
-						          <span class>{{ link.label }}</span><i id="caret-toggle" class="fa-solid fa-caret-down mt-1"></i>
-						        </a>
-						        <!-- Collapsed content -->
-						        <ul id="collapseMenuItem{{ forloop.counter }}" class="collapse show list-group list-group-flush">
-						        	{% for dropdown_link in link.dropdown_links %}
-						        	<li class="list-group-item py-1">
-						        		{% if dropdown_link.icon %}
-						            		<i class="{{dropdown_link.icon}} mx-2"></i>
-						            	{% endif %}
-						            	<a href="{{ dropdown_link.url }}" class="text-reset">{{ dropdown_link.label }}</a>
-						          	</li>
-						          	{% endfor %}
-						        </ul>
-						     {% else %}
-						     	<li class="list-group-item py-1">
-			                        <a class="nav-link" href="{{ link.url }}">{{ link.label }}</a>
-			                    </li>
-			                 {% endif %}
-			             {% endfor %}
-				     {% endblock %}
-			      </div>
-			    </div>
-			  </nav>
-			  <!-- Sidebar -->
+			{% if user.is_authenticated %}
+				<!-- Sidebar -->
+				<nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white">
+				    <div class="position-sticky">
+				      <div class="list-group list-group-flush mx-3 mt-4">
+				        {% block navbar-links %}
+			        		{% for link in navbar_links %}
+			        			{% if link.dropdown_links %}		
+							        <a
+							          class="list-group-item list-group-item-action py-2 ripple"
+							          data-mdb-collapse-init
+							          data-toggle="collapse"
+							          href="#collapseMenuItem{{ forloop.counter }}"
+							          aria-expanded="true"
+							          aria-controls="collapseMenuItem{{ forloop.counter }}"
+							        >
+							          {% if link.icon %}
+							          	<i class="{{ link.icon }}"></i>
+							          {% endif %}
+							          <span class>{{ link.label }}</span><i id="caret-toggle" class="fa-solid fa-caret-down mt-1"></i>
+							        </a>
+							        <!-- Collapsed content -->
+							        <ul id="collapseMenuItem{{ forloop.counter }}" class="collapse show list-group list-group-flush">
+							        	{% for dropdown_link in link.dropdown_links %}
+							        	<li class="list-group-item list-group-item-action side-nav-item py-1 ripple">
+							        		{% if dropdown_link.icon %}
+							            		<i class="{{dropdown_link.icon}}"></i>
+							            	{% endif %}
+							            	<a href="{{ dropdown_link.url }}" class="text-reset">{{ dropdown_link.label }}</a>
+							          	</li>
+							          	{% endfor %}
+							        </ul>
+							     {% else %}
+							     	<a href="{{ link.url }}" class="list-group-item list-group-item-action side-nav-item py-2 ripple" data-mdb-ripple-init>
+				                        <i class="{{ link.icon }}"></i><span>{{ link.label }}</span>
+				                    </a>
+				                 {% endif %}
+				             {% endfor %}
+					     {% endblock %}
+				      </div>
+				    </div>
+				  </nav>
+				  <!-- Sidebar -->
+			  {% endif %}
 
 			  <!-- Navbar -->
 			  <nav id="main-navbar" class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
@@ -98,35 +124,43 @@
 			
 			      <!-- Brand -->
 			      <a class="navbar-brand" href="#">
-			      	{% block nav-title %} BHHP DataCore (PO1) {% endblock %}
-			      </a>
+				      <img
+				        src="{% static 'datacore/img/cloud-network-icon.png' %}"
+				        class="me-2"
+				        height="30"
+				        alt="DataCore Logo"
+				        loading="lazy"
+				      />
+				      <small>{% block nav-title %} BHHP DataCore (PO1) {% endblock %}</small>
+				  </a>
 			
 			      <!-- Right links -->
-			      <ul class="navbar-nav ms-auto d-flex flex-row">	
+			      <div class="d-flex align-items-center">	
 			        <!-- Avatar -->
 			        {% if user.is_authenticated %}
-			        <li class="nav-item dropdown">
-			          <a
-			            data-mdb-dropdown-init class="nav-link dropdown-toggle hidden-arrow d-flex align-items-center"
-			            href="#"
-			            id="navbarDropdownMenuLink"
-			            role="button"
-			            data-mdb-toggle="dropdown"
-			            aria-expanded="false"
-			          >
-			            <i class="fa-regular fa-circle-user mx-2" style="font-size: 22px"></i><i class="fa-solid fa-caret-down"></i>
-			          </a>
-			          <ul
-			            class="dropdown-menu dropdown-menu-end"
-			            aria-labelledby="navbarDropdownMenuLink"
-			          >
-			            <li><a class="dropdown-item" href="#">My profile</a></li>
-			            <li><a class="dropdown-item" href="#">Settings</a></li>
-			            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-			          </ul>
-			        </li>
+				        <div class="dropdown">
+				          <a
+				            data-mdb-dropdown-init
+				            class="dropdown-toggle d-flex align-items-center hidden-arrow"
+				            href="#"
+				            id="navbarDropdownMenuLink"
+				            role="button"
+				            aria-expanded="false"
+				          >
+				          	<div class="badge badge-primary rounded-4 p-3">
+							  	<i class="fa-solid fa-user me-3"></i><i class="fa-solid fa-caret-down"></i>
+							</div>
+				          </a>
+				          <ul
+				            class="dropdown-menu dropdown-menu-end"
+				            aria-labelledby="navbarDropdownMenuLink"
+				          >
+				            <li><a class="dropdown-item" href="#">My profile</a></li>
+				            <li><a class="dropdown-item" onclick="logout()">Logout</a></li>
+				          </ul>
+				        </div>
 			        {% endif %}
-			      </ul>
+			      </div>
 			    </div>
 			    <!-- Container wrapper -->
 			  </nav>
@@ -135,11 +169,11 @@
 	
 		<!--Main layout (Content)-->
 		{% block main-content %}
-			<main style="margin-top: 58px;">
+			<main style="margin-top: 58px; padding-bottom: 60px;">
 				{% block breadcumb-nav %}
 					<!-- If navigation breadcrumb needed -->
 				{% endblock %}
-				<div class="container pt-4 overflow-hidden">
+				<div class="container pt-4" id="main-container">
 					{% block content %}
 				    	<!-- Default content -->
 				    {% endblock %}
@@ -149,11 +183,7 @@
 		<!--Main layout-->
 
 		<!--Footer-->
-		<footer class="bg-body-tertiary text-lg-start fixed-bottom">
-			<!-- Grid container -->
-  			<div class="container p-4">{% block footer-links %}{% endblock %}</div>
-  			<!-- Grid container -->
-			
+		<footer class="bg-body-tertiary text-lg-start fixed-bottom">			
 			<!-- Copyright -->
 			<div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
 				© 2024 Copyright: <a class="text-body" href="/">Botswana Harvard Health Partnership</a>
@@ -169,6 +199,54 @@
 		<script src="{% static 'datatables/js/dataTables.bootstrap5.js' %}"></script>
 		<script src="{% static 'datatables/js/dataTables.searchPanes.min.js' %}"></script>
 		<script src="{% static 'datatables/js/dataTables.select.min.js' %}"></script>
-		{% block custom-js %} <!-- Additional JS --> {% endblock custom-js %}
+		{% block custom-js %}
+			<!-- Additional JS -->
+			<script>
+				function logout() {
+		            fetch('/api/auth/logout/', {
+		                method: 'POST',
+		                headers: {
+		                    'Content-Type': 'application/json',
+		                    'Authorization': 'Token {{user.auth_token}}'
+		                },
+		                headers: {
+		                    'Content-Type': 'application/json'
+		                },
+		                body: JSON.stringify({})
+		            })
+		            .then(response => response.json())
+		            .then(data => {
+		                if (data.detail) {
+		                    window.location.href = '/';
+		                } else {
+		                    alert('Logout failed: ' + JSON.stringify(data));
+		                }
+		            });
+		        }
+				
+				document.addEventListener('DOMContentLoaded', function() {
+				    // Get the current URL path
+				    var currentPath = window.location.pathname;
+
+				    // Get all side navigation items
+				    var navItems = document.querySelectorAll('.list-group-item');
+
+				    // Loop through each item
+				    navItems.forEach(function(item) {
+				        // Get the href attribute of the item
+				        var itemPath = item.getAttribute('href');
+				        // Check if the current path matches the item path
+				        if (itemPath === currentPath) {
+				            // Add active class to the matching item
+				            item.classList.add('active', 'shadow-3');
+				        } else {
+				            // Remove active class from non-matching items
+				            item.classList.remove('active');
+				        }
+				    });
+				});
+
+			</script>
+		{% endblock custom-js %}
 	</body>
 </html>

@@ -1,21 +1,27 @@
+import os
 from django.apps import apps as django_apps
 from django.contrib.auth.decorators import login_required
-from django.http.response import JsonResponse
+from django.conf import settings
+from django.http.response import JsonResponse, HttpResponse
+from django.http import Http404
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
-from ..models import Projects, InstrumentsMeta
+from ..models import Projects, InstrumentsMeta, ExportFile
 from ..export_utils import GenerateDataExports
 
+upload_folder = settings.MEDIA_ROOT
 
-# @login_required(login_url='/')
+exclude_fields = ['id', 'record_id', 'complete']
+
+
+@login_required(login_url='/')
 def render_export_reports_page(request, project_names):
-
-    # fields = Field.objects.filter(form__project__id__in=project_ids)
     data = [{'tab_item': 'projects',
              'table_columns': get_project_columns(),
              'table_id': 'projectsList',
              'data_url': 'tsepamo:projects-details',
-             'url_kwargs': {}},
+             'url_kwargs': {'project_names': project_names}},
             {'tab_item': 'instruments',
              'table_columns': get_forms_columns(),
              'table_id': 'instrumentsList',
@@ -32,18 +38,32 @@ def render_export_reports_page(request, project_names):
     })
 
 
+@login_required(login_url='/')
 def render_projects_page(request):
     table_columns = get_project_columns()
     return render(
         request, 'tsepamo/projects.html', {'table_columns': table_columns})
 
 
-def project_data_view(request):
+@login_required(login_url='/')
+def render_repository_page(request):
+    latest_file = get_latest_export_file()
+    repository_columns = get_repository_columns()
+    return render(request, 'tsepamo/repository.html',
+                  {'recent_file': latest_file,
+                   'data_url': 'tsepamo:repository-details',
+                   'table_columns': repository_columns})
+
+
+@login_required(login_url='/')
+def project_data_view(request, project_names=''):
     if request.method == 'GET':
-        project_details = get_project_details()
+        project_names = project_names.split(',') if project_names else []
+        project_details = get_project_details(project_names)
         return JsonResponse(project_details, safe=False)
 
 
+@login_required(login_url='/')
 def form_data_view(request, project_names):
     if request.method == 'GET':
         project_names = project_names.split(',')
@@ -51,7 +71,24 @@ def form_data_view(request, project_names):
         return JsonResponse(form_details, safe=False)
 
 
-# @login_required(login_url='/')
+@login_required(login_url='/')
+def fetch_fields_view(request, instrument_names):
+    if request.method == 'GET' and instrument_names:
+        instrument_names = instrument_names.split(',')
+        fields_data = []
+        for name in instrument_names:
+            fields_data.extend(get_fields_by_name(name))
+        return JsonResponse(fields_data, safe=False)
+
+
+@login_required(login_url='/')
+def repository_data_view(request):
+    if request.method == 'GET':
+        repository_data = get_repository_details()
+        return JsonResponse(repository_data, safe=False)
+
+
+@login_required(login_url='/')
 def project_fields(request, project_name):
     model_cls = django_apps.get_model('tsepamo', project_name)
     fields_tuple = model_cls._meta.fields
@@ -59,25 +96,22 @@ def project_fields(request, project_name):
     return JsonResponse(fields, safe=False)
 
 
-# def fetch_fields(request):
-#     form_ids = request.GET.get('form_ids', '').split(',')
-#     fields = Field.objects.filter(form__id__in=form_ids)
-#     fields_data = [{
-#         'id': field.id,
-#         'form_name': field.form.name,
-#         'name': field.name,
-#         'field_type': field.field_type
-#     } for field in fields]
-#     return JsonResponse({'fields': fields_data})
-
-
+@csrf_exempt
 @login_required(login_url='/')
-def export_view(request, project_name):
-    if request.method == 'GET':
-        fields_list = get_fields_from_request(request)
-        gen_exports = GenerateDataExports('tsepamo', project_name, fields_list)
-        response = gen_exports.export_as_csv()
-        return response
+def export_view(request):
+    if request.method == 'POST':
+        export_name = request.POST.get('export_name')
+        export_types = request.POST.get('export_type').split(',')
+        selected_fields = request.POST.get('selected_fields').split(',')
+        selected_instruments = request.POST.get('selected_instruments').split(',')
+        user_created = request.user.username
+
+        export_cls = GenerateDataExports(
+            export_name, user_created, 'tsepamo', export_types,
+            selected_instruments, selected_fields,)
+        return export_cls.generate_exports()
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 @login_required(login_url='/')
@@ -89,10 +123,45 @@ def preview_data_view(request, project_name):
         return JsonResponse(data, safe=False)
 
 
+def download_export_file_view(request, file_name):
+    file_path = os.path.join(upload_folder, 'documents', file_name)
+    if os.path.exists(file_path):
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/octet-stream")
+            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+            return response
+    else:
+        raise Http404("File does not exist")
+
+
+def get_repository_details():
+    records = []
+    repository_data = ExportFile.objects.all()
+    for data in repository_data:
+        records.append(
+            {'name': data.name,
+             'file_type': data.extension,
+             'date_created': data.date_created.strftime('%Y-%m-%d %H:%M'),
+             'user_created': data.user_badge,
+             'file_status': data.export_status,
+             'file_size': data.sizify,
+             'actions': data.actions, })
+    return records
+
+
 def get_fields_from_request(request):
     selected_fields = request.GET.get('fields', '')
     fields_list = selected_fields.split(',')
     return fields_list
+
+
+def get_fields_by_name(model_name):
+    model_cls = django_apps.get_model('tsepamo', model_name)
+    fields_tuple = model_cls._meta.fields
+    return [{'name': field.name,
+             'verbose_name': field.verbose_name,
+             'instrument_name': model_name,
+             'field_type': field.get_internal_type()} for field in fields_tuple if field.name not in exclude_fields]
 
 
 def get_project_details(project_names=[]):
@@ -132,8 +201,20 @@ def get_forms_columns():
 
 
 def get_fields_columns():
-    return [{'title': 'Field Name', 'data': 'verbose_name', },
-            {'title': 'Field Type', 'data': 'field_type', }]
+    return [{'title': 'Verbose Field Name', 'data': 'verbose_name', },
+            {'title': 'Variable Name', 'data': 'name', },
+            {'title': 'Field Type', 'data': 'field_type', },
+            {'title': 'Instrument Name', 'data': 'instrument_name', }]
+
+
+def get_repository_columns():
+    return [{'title': 'File Name', 'data': 'name', },
+            {'title': 'File Type', 'data': 'file_type', },
+            {'title': 'Created', 'data': 'date_created', },
+            {'title': 'Created by', 'data': 'user_created', },
+            {'title': 'Status', 'data': 'file_status', },
+            {'title': 'Size', 'data': 'file_size', },
+            {'title': 'Actions', 'data': 'actions', }]
 
 
 def get_related_models_info(instance, app_label='tsepamo', ):
@@ -152,8 +233,8 @@ def get_related_models_info(instance, app_label='tsepamo', ):
         records_count = get_record_count(related_model_cls)
 
         related_models.append(
-            {'project_name': instance.verbose_name,
-             'model_name': related_model_name,
+            {'name': related_model_name,
+             'project_name': instance.verbose_name,
              'verbose_name': related_model_cls._meta.verbose_name,
              'records_count': records_count})
     return related_models
@@ -168,3 +249,12 @@ def get_projects_by_name(project_names=[]):
 
 def get_record_count(model_cls):
     return model_cls.objects.count()
+
+
+def get_latest_export_file():
+    try:
+        latest_file = ExportFile.objects.latest('date_created')
+    except ExportFile.DoesNotExist:
+        return None
+    else:
+        return latest_file

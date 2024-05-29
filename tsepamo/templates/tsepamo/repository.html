@@ -1,0 +1,68 @@
+<!-- repository.html -->
+
+{% extends 'datacore/base.html' %}
+{% load tsepamo_extras %}
+
+{% block custom-css %}
+ 	{{ block.super }}
+   	<style>
+        .recent-files {
+        	border: 1px solid lightgray;
+        	border-radius: 6px;
+        	
+        }
+   	</style>
+{% endblock custom-css %}
+
+{% block breadcumb-nav %}
+	<nav data-mdb-navbar-init class="navbar navbar-expand-lg bg-body-primary">
+	  <div class="container-fluid">
+	    <nav aria-label="breadcrumb">
+	      <ol class="breadcrumb">
+	        <li class="breadcrumb-item"><a href="/dashboard/">Dashboard</a></li>
+	        <li class="breadcrumb-item active" aria-current="page">Repository</li>
+	      </ol>
+	    </nav>
+	  </div>
+	</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row gy-5">
+	<div class="card">
+		<div class="card-header">
+			<i class="fa-solid fa-box-archive me-2"></i> Storage
+		</div>
+		<div class="card-body">
+			<div class="row gy-5">
+				{% if recent_file %}
+					<div class="row recent-files mt-5 mx-2 py-2 gy-2 shadow-2" style="width: 25rem;">
+						<div>
+							<h5 class=" mb-0 text-body-secondary" style="font-weight:300">Recent</h5>
+						</div>
+						<hr class="hr hr-blurry" />
+						<div class="pt-0 mt-0">
+							<small class="mb-2 text-body-secondary">
+						  		<i class="fa-solid fa-file-lines fa-lg me-2" style="color: #84cc8c;"></i> {{ recent_file.name }}
+						  	</small>
+						</div>
+						<div>
+							<small class="mb-2 text-body-secondary">Created by: </small>
+							<small>{{ recent_file.related_user.first_name }} {{ recent_file.related_user.last_name }}</small>
+						</div>
+						<div>
+							<small class="mb-2 text-body-secondary">Created: </small>
+							<small>{{ recent_file.date_created }}</small>
+						</div>
+					</div>
+				{% endif %}
+
+				<div class="table-responsive-sm">
+					{% render_datatable data_url=data_url columns=table_columns table_id="repositoryList" show_checkbox=False include_seach_panes=False download_action=True %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}

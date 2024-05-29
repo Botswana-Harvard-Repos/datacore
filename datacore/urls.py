@@ -18,19 +18,15 @@ from django.contrib import admin
 from django.urls import path
 from django.urls.conf import include
 
-from authentication.views import login_page, user_logout_handle
-from authentication.views import UserLoginView, UserLogoutView, UserRegistrationView
+from authentication.views import login_page
 
 from .views import main_page
 
 urlpatterns = [
     path('', login_page, name='login'),
-    path('logout/', user_logout_handle, name='logout'),
 
-    # Authentication API urls
-    path('api/auth/register/', UserRegistrationView.as_view(), name='user-registration'),
-    path('api/auth/login/', UserLoginView.as_view(), name='user-login'),
-    path('api/auth/logout/', UserLogoutView.as_view(), name='user-logout'),
+    # Authentication urls
+    path('api/auth/', include('authentication.urls')),
 
     path('dashboard/', main_page, name='dashboard'),
     path('admin/', admin.site.urls),
