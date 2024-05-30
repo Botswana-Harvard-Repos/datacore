@@ -14,7 +14,7 @@ logger = logging.getLogger('celery_progress')
 def run_load_model_data_task():
     logger.debug("The data files")
 
-    csv_files = [('/home/datacore/source/datacore/Tsepamo_1.csv'
+    csv_files = [('/home/datacore/source/datacore/Tsepamo_1.csv',
                   ['tsepamo.tsepamoone', 'tsepamo.outcomesone']),
                  ('/home/datacore/source/datacore/Tsepamo_2.csv',
                   ['tsepamo.tsepamotwo', 'tsepamo.outcomestwo', 'tsepamo.switcheripmstwo',
