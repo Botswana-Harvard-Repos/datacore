@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ..models import Projects, InstrumentsMeta, ExportFile
 from ..export_utils import GenerateDataExports
+from ..tasks import generate_exports
 
 upload_folder = settings.MEDIA_ROOT
 
@@ -101,15 +102,19 @@ def project_fields(request, project_name):
 def export_view(request):
     if request.method == 'POST':
         export_name = request.POST.get('export_name')
-        export_types = request.POST.get('export_type').split(',')
+        export_type = request.POST.get('export_type')
         selected_fields = request.POST.get('selected_fields').split(',')
         selected_instruments = request.POST.get('selected_instruments').split(',')
         user_created = request.user.username
+        user_email = request.user.email
 
-        export_cls = GenerateDataExports(
-            export_name, user_created, 'tsepamo', export_types,
-            selected_instruments, selected_fields,)
-        return export_cls.generate_exports()
+        generate_exports.delay(export_name, user_created, [user_email, ], 'tsepamo',
+                               export_type, selected_instruments, selected_fields)
+        # export_cls = GenerateDataExports(
+        #     export_name, user_created, 'tsepamo', export_types,
+        #     selected_instruments, selected_fields,)
+        return JsonResponse(
+            {'status': 'CSV export started, you will receive an email once it is ready.'})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -136,7 +141,7 @@ def download_export_file_view(request, file_name):
 
 def get_repository_details():
     records = []
-    repository_data = ExportFile.objects.all()
+    repository_data = ExportFile.objects.order_by('-date_created')
     for data in repository_data:
         records.append(
             {'name': data.name,

@@ -4,6 +4,7 @@ import datetime
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.http.response import HttpResponse
+from io import BytesIO
 
 from .models import ExportFile
 
@@ -16,9 +17,9 @@ class GenerateDataExports:
         of fields or all the model fields.
     """
 
-    def __init__(self, export_name, user_created, app_label='', export_types=[], model_names=[], export_fields=[]):
+    def __init__(self, export_name, user_created, app_label='', export_type='csv', model_names=[], export_fields=[]):
         self.export_model_cls = ExportFile
-        self.export_types = export_types
+        self.export_type = export_type
         self.export_name = export_name
         self.model_names = model_names
         self.export_fields = export_fields
@@ -26,7 +27,7 @@ class GenerateDataExports:
         self.user_created = user_created
         self.export_data = []
 
-        if self.export_fields and self.model_names and self.export_types and self.export_name:
+        if self.export_fields and self.model_names and self.export_type and self.export_name:
             self.export_data = self.prepare_export_data()
 
     @property
@@ -46,9 +47,10 @@ class GenerateDataExports:
             return {obj.pop('record_id'): obj for obj in model_cls.objects.values(*fields)}
 
     def generate_exports(self):
-        for export_type in self.export_types:
-            if export_type.lower() == 'csv':
-                return self.write_to_csv(self.export_data)
+        if self.export_type.lower() == 'csv':
+            return self.write_to_csv(self.export_data)
+        if self.export_type.lower() == 'excel':
+            return self.write_to_excel(self.export_data)
 
     def prepare_export_data(self):
         all_model_data = []
@@ -84,6 +86,32 @@ class GenerateDataExports:
         self.handle_export_response(response)
         return response
 
+    def write_to_excel(self, records):
+        """ Write data to excel format and returns response
+        """
+        excel_buffer = BytesIO()
+        writer = pd.ExcelWriter(excel_buffer, engine='openpyxl')
+
+        df = pd.DataFrame(records)
+        df.to_excel(writer, sheet_name=f'{self.export_name}', index=False)
+
+        # Save and close the workbook
+        writer.close()
+
+        # Seek to the beginning and read to copy the workbook to a variable in memory
+        excel_buffer.seek(0)
+        workbook = excel_buffer.read()
+
+        # Create an HTTP response with the Excel file as an attachment
+        response = HttpResponse(
+            workbook,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+        response['Content-Disposition'] = f'attachment; filename={self.get_export_filename()}.xlsx'
+        self.handle_export_response(response, export_type='xlsx')
+        return response
+
     def handle_export_response(self, response, export_type='csv'):
         file_path = f'{upload_folder}/documents'
         file_name = f'{self.get_export_filename()}.{export_type}'
@@ -97,7 +125,7 @@ class GenerateDataExports:
             with open(f'{file_path}/{file_name}', 'wb') as file:
                 file.write(response.content)
             # Create model instance for export file generated.
-            self.create_export_model_instance(export_file=file_name)
+            # self.create_export_model_instance(export_file=file_name)
         else:
             response.raise_for_status()
 
@@ -106,10 +134,10 @@ class GenerateDataExports:
         filename = "%s-%s" % (self.export_name, date_str)
         return filename
 
-    def create_export_model_instance(self, export_file):
+    def create_export_model_instance(self, export_type):
+        file_name = f'{self.get_export_filename()}.{export_type}'
         upload_to = self.export_model_cls.file.field.upload_to
-        self.export_model_cls.objects.create(
-            name=export_file,
-            download_complete=True,
+        return self.export_model_cls.objects.create(
+            name=file_name,
             user_created=self.user_created,
-            file=upload_to + export_file, )
+            file=upload_to + file_name, )

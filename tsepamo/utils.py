@@ -9,9 +9,6 @@ logger = logging.getLogger('celery_progress')
 
 
 class LoadCSVData:
-    def __init__(self):
-        self.data = []
-
     def map_choice_data(self, key, value, record):
         is_choice = key.split('___')
         if len(is_choice) > 1:
@@ -27,6 +24,7 @@ class LoadCSVData:
         return False
 
     def read_csv_data(self, csv_file):
+        data = []
         with open(csv_file, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
@@ -35,12 +33,12 @@ class LoadCSVData:
                     if self.map_choice_data(key, value, record):
                         continue
                     record.update({f'{key}': value})
-                self.data.append(record)
-        return self.data
+                data.append(record)
+        return data
 
     def load_model_data(self, data, model_names):
         for model_name in model_names:
-            logger.debug("Model:",model_name)
+            logger.debug("Model:", model_name)
             model_cls = django_apps.get_model(model_name)
             model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
 
@@ -73,9 +71,8 @@ class LoadCSVData:
                 # else:
                     create_record = formatted_record.copy()
                     create_record.update(record_id=record.get('record_id'))
-                    logger.debug("Create Record",record.get('record_id'))
-                    model_cls.objects.create(**create_record)            
-                
+                    logger.debug("Create Record", record.get('record_id'))
+                    model_cls.objects.create(**create_record)
 
     def load_model_data_all(self, csv_files):
         for csv_file, model_names in csv_files:

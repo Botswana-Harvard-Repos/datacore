@@ -4,4 +4,9 @@ pymongo==3.12.3
 dnspython
 pytz
 ipykernel
+openpyxl
+djangorestframework
+corsheader
+django-allauth
+dj-rest-auth
 git+https://github.com/botswana-harvard/edc-constants.git@develop#egg=edc_constants
