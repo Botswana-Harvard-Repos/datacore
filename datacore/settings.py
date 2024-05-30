@@ -90,7 +90,6 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'corsheaders',
-    'anymail',
     'authentication.apps.AuthenticationConfig',
     'tsepamo.apps.TsepamoConfig',
     'datacore'
@@ -178,21 +177,13 @@ REST_AUTH = {
 
 # Email configurations
 
-EMAIL_BACKEND = 'anymail.backends.postmark.EmailBackend'
-# EMAIL_HOST = config['email_conf'].get('email_host')
-# EMAIL_USE_TLS = config['email_conf'].get('email_use_tls')
-# EMAIL_PORT = config['email_conf'].get('email_port')
-# DEFAULT_FROM_EMAIL = config['email_conf'].get('email_user')
-# EMAIL_HOST_USER = config['email_conf'].get('email_user')
-# EMAIL_HOST_PASSWORD = config['email_conf'].get('email_host_pwd')
-# EMAIL_USE_SSL = False
-
-ANYMAIL = {
-    'POSTMARK_SERVER_TOKEN': '8ed81295-95bd-4929-a2d4-4698cdb33dd3',
-}
-
-DEFAULT_FROM_EMAIL = 'adiphoko@bhp.org.bw'
-EMAIL_PORT = 587
+EMAIL_BACKEND = config['email_conf'].get('email_backend')
+EMAIL_HOST = config['email_conf'].get('email_host')
+EMAIL_USE_TLS = config['email_conf'].get('email_use_tls')
+EMAIL_PORT = config['email_conf'].get('email_port')
+DEFAULT_FROM_EMAIL = config['email_conf'].get('email_user')
+EMAIL_HOST_USER = config['email_conf'].get('email_user')
+EMAIL_HOST_PASSWORD = config['email_conf'].get('email_host_pwd')
 
 EMAIL_CONFIRM_REDIRECT_BASE_URL = 'http://localhost:8001/email/confirm/'
 
@@ -226,6 +217,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'datacore', 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery settings
+CELERY_TIMEZONE = 'Africa/Gaborone'
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_RESULT_BACKEND = "redis://localhost:6379"
 
