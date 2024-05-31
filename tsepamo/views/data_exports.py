@@ -8,7 +8,6 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from ..models import Projects, InstrumentsMeta, ExportFile
-from ..export_utils import GenerateDataExports
 from ..tasks import generate_exports
 
 upload_folder = settings.MEDIA_ROOT
@@ -54,6 +53,13 @@ def render_repository_page(request):
                   {'recent_file': latest_file,
                    'data_url': 'tsepamo:repository-details',
                    'table_columns': repository_columns})
+
+
+@login_required(login_url='/')
+def render_dashboard_page(request):
+    project_details = get_project_details()
+    return render(request, 'tsepamo/dashboard.html', {
+        'project_details': project_details})
 
 
 @login_required(login_url='/')

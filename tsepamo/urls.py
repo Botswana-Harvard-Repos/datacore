@@ -5,14 +5,14 @@ from django.urls import path
 from .views import (render_export_reports_page, project_fields, export_view,
                     preview_data_view, render_projects_page, render_repository_page,
                     project_data_view, form_data_view, fetch_fields_view, repository_data_view,
-                    download_export_file_view)
+                    download_export_file_view, render_dashboard_page)
 
 app_name = 'tsepamo'
 
 navbar_links = [
     {
         'label': 'Dashboard',
-        'url': '/dashboard/',
+        'url': '/tsepamo/dashboard/',
         'icon': 'fas fa-tachometer-alt fa-fw me-3'
     },
     {
@@ -37,6 +37,8 @@ navbar_links = [
 ]
 
 urlpatterns = [
+    path('dashboard/', render_dashboard_page, name='tsepamo-dashboard'),
+
     path('projects/', render_projects_page, name='projects-list'),
     path('projects/details/', project_data_view, name='projects-details'),
 

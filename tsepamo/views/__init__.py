@@ -9,3 +9,4 @@ from .data_exports import fetch_fields_view
 from .data_exports import render_repository_page
 from .data_exports import repository_data_view
 from .data_exports import download_export_file_view
+from .data_exports import render_dashboard_page

@@ -61,6 +61,7 @@
 	<body>
 		<header>
 			{% if user.is_authenticated %}
+				{% block sidebar %}
 				<!-- Sidebar -->
 				<nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white">
 				    <div class="position-sticky">
@@ -103,6 +104,7 @@
 				    </div>
 				  </nav>
 				  <!-- Sidebar -->
+				{% endblock sidebar %}
 			  {% endif %}
 
 			  <!-- Navbar -->
@@ -155,7 +157,7 @@
 				            class="dropdown-menu dropdown-menu-end"
 				            aria-labelledby="navbarDropdownMenuLink"
 				          >
-				            <li><a class="dropdown-item" href="#">My profile</a></li>
+				            <li><a class="dropdown-item" href="{% url 'authentication:user_profile' %}">My profile</a></li>
 				            <li><a class="dropdown-item" onclick="logout()">Logout</a></li>
 				          </ul>
 				        </div>

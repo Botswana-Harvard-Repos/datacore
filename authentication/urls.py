@@ -11,9 +11,12 @@ from dj_rest_auth.views import (
 
 from .views.custom_rest_views import email_confirm_redirect, password_reset_confirm_redirect
 from .views.custom_rest_views import VerifyEmailView
+from .views import user_profile_page
 from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.views import LoginView, LogoutView, UserDetailsView
 from django.urls import path
+
+app_name = 'authentication'
 
 
 urlpatterns = [
@@ -33,4 +36,7 @@ urlpatterns = [
         name='password_reset_confirm',
     ),
     path('password/reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
+    # Custom URLs
+    path('user/profile/', user_profile_page, name='user_profile'),
 ]
