@@ -87,8 +87,8 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
 
         # Setup retry strategy
         retry_strategy = Retry(
-            total=3,  # Number of retries
-            backoff_factor=1,  # Wait between retries
+            total=10,  # Number of retries
+            backoff_factor=10,  # Wait between retries
             status_forcelist=[429, 500, 502, 503, 504],  # Retry on these status codes
             method_whitelist=["HEAD", "GET", "OPTIONS", "POST"]  # Allow retry on these methods
         )
