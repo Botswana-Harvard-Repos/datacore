@@ -1,0 +1,37 @@
+{% extends 'datacore/base.html' %}
+
+{% block content %}
+
+<div class="row py-5">
+	{% for project in project_details %}
+		<div class="col-md-6 mb-5">
+			<div class="card border {% if forloop.counter|divisibleby:2 %} border-info {% else %} border-warning {% endif %} shadow-3-strong">
+			  <div class="card-header {% if forloop.counter|divisibleby:2 %} text-bg-info {% else %} text-bg-warning {% endif %}">
+			    {{ project.verbose_name }}
+			  </div>
+			  <div class="card-body">
+			    <div class="row gx-2">
+				    <div class="col">
+				      <div><em><b>Project ID</b></em></div>
+				    </div>
+				    <div class="col">
+				      <div><b>{{ project.name }}</b></div>
+				    </div>
+				 </div>
+				  <div class="row gx-2">
+				    <div class="col">
+				      <div class="text-muted">Instruments</div>
+				      <div class="text-muted">Records</div>
+				    </div>
+				    <div class="col">
+				      <div class="text-muted">{{ project.instruments }}</div>
+				      <div class="text-muted">{{ project.records }}</div>
+				    </div>
+				 </div>
+			  </div>
+			</div>
+		</div>
+	{% endfor %}
+</div>
+
+{% endblock %}

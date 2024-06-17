@@ -48,7 +48,7 @@
 
 	<div class="row gy-5">
 		<div id="notification" class="alert alert-success alert-dismissible fade show d-none" role="alert">
-			Export is ready! The download will start shortly!
+			Export has been successfully generated, an email will be sent once ready.
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 		</div>
 
@@ -96,7 +96,7 @@
 			<ul class="nav nav-tabs" id="exportTabs" role="tablist">
 			{% for data_item in data %}
 		           <li class="nav-item" role="presentation">
-		               <a 	data-mdb-tab-init
+		               <a data-mdb-tab-init
 		               	class="nav-link {% if forloop.first %} active {% endif %}"
 		               	id="{{ data_item.tab_item }}-tab"
 		               	href="#{{ data_item.tab_item }}"
@@ -119,15 +119,19 @@
 		           		id="{{ data_item.tab_item }}"
 		           		role="tabpanel"
 		           		aria-labelledby="{{ data_item.tab_item }}-tab">
-		           		<div class="table-responsive-sm">
-		           			{% if data_item.tab_item == 'instruments' %}
-		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True include_seach_panes=False %}
-		           			{% elif data_item.tab_item == 'fields' %}
-		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True allow_select_all=False include_seach_panes=False %}
-		           			{% else %}
-		           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
-		           			{% endif %}
-		           		</div>
+		           		{% if data_item.includes_table %}
+			           		<div class="table-responsive-sm">
+			           			{% if data_item.tab_item == 'instruments' %}
+			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True include_seach_panes=False %}
+			           			{% elif data_item.tab_item == 'fields' %}
+			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True allow_select_all=False include_seach_panes=False %}
+			           			{% else %}
+			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
+			           			{% endif %}
+			           		</div>
+			           	{% else %}
+			           		<ul id="preview-list"></ul>
+			           	{% endif %}
 		           </div>
 		       {% endfor %}
 		      </div>
@@ -139,10 +143,11 @@
 	{{ block.super }}
 	<script>
 		$(document).ready(function() {
+			var selectedFieldNames = []; // Global array to store selected field names
 			var fieldsTable = window['fieldsList_table'];
 			var maxSelections = 16384; // limit to the fields that can be selected due to exports columns limit
 
-			function updateSelectedFieldsCount(selectedFieldNames) {
+			function updateSelectedFieldsCount() {
 				var count = selectedFieldNames.length;
 				$('#fieldsCount').text(count);
 				if (count >= maxSelections) {
@@ -159,13 +164,53 @@
                             form_ids: selectedNames.join(',')
                         },
                         success: function(data) {
+                        	// Store the newly fetched field names
+                            var newFieldNames = data.map(function(field) {
+                                return field.name; // Assuming each field has a unique 'name' property
+                            });
+
+                         	// Remove selections for fields that are no longer present
+                            selectedFieldNames = selectedFieldNames.filter(function(fieldName) {
+                                return newFieldNames.includes(fieldName);
+                            });
+ 
                             fieldsTable.clear();
                             fieldsTable.rows.add(data);
                             fieldsTable.draw();
+                            
+                         	// Restore selections
+                            fieldsTable.off('draw').on('draw', function() {
+                                fieldsTable.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                                    var data = this.data();
+                                    if (selectedFieldNames.includes(data.name)) {
+                                        $(this.node()).find('input[type="checkbox"]').prop('checked', true);
+                                    }
+                                });
+
+                                // Add event listener for field selection changes
+                                fieldsTable.off('change', 'input[type="checkbox"]').on('change', 'input[type="checkbox"]', function() {
+                                	var fieldName = fieldsTable.row($(this).closest('tr')).data().name;
+                                    if ($(this).is(':checked')) {
+                                    	if (!selectedFieldNames.includes(fieldName)) {
+                                    		selectedFieldNames.push(fieldName);
+                                    	}
+                                    } else {
+                                    	selectedFieldNames = selectedFieldNames.filter(function(name) {
+                                            return name !== fieldName;
+                                        });
+                                    }
+                                });
+                                
+                                // Update the selected fields count on selections restore
+                                updateSelectedFieldsCount();
+                            });
+
                         }
                     });
                 } else {
                     fieldsTable.clear().draw();
+                    selectedFieldNames = []; // Clear selections when no instruments are selected
+                    updateSelectedFieldsCount(); // Update fields count
                 }
             }
 			
@@ -177,10 +222,8 @@
                 selectedInstrumentNames = selectedNames;
             });
 
-            var selectedFieldNames = [];
          	// Add event listener for field checkboxes
             $(document).on('fieldsListcheckboxChanged', function(event, selectedNames) {
-            	updateSelectedFieldsCount(selectedNames);
 
             	// Merge the new selections with the existing ones
                 selectedNames.forEach(name => {
@@ -190,8 +233,9 @@
                 });
             	
              	// Remove deselected fields
-                /* selectedFieldNames = selectedFieldNames.filter(name => selectedNames.includes(name));
-            	console.log(selectedFieldNames); */
+                selectedFieldNames = selectedFieldNames.filter(name => selectedNames.includes(name));
+ 
+                updateSelectedFieldsCount();
             });
 
          	// Export button click handler
@@ -230,12 +274,12 @@
                         selected_instruments: selectedInstrumentNames.join(',')
                     },
                     success: function(response) {
-                        // Handle success response
-                        window.location.href = "{% url 'tsepamo:repository' %}";
                         // Hide spinner
                         $('#spinner-overlay').addClass('d-none');
                      	// Show the notification
                         $('#notification').removeClass('d-none');
+                     	// Handle success response
+                        window.location.href = "{% url 'tsepamo:repository' %}";
                     },
                     error: function(error) {
                         // Handle error response
@@ -245,6 +289,23 @@
                     }
                 });
             });
+         	
+         	// Add a click event listener to all tab links
+            $('#preview-tab').click(function(event) {
+              event.preventDefault(); // Prevent the default action (navigation)
+
+              updatePreviewTab();
+            });
+         	
+            function updatePreviewTab() {
+
+                var previewList = $('#preview-list');
+                previewList.empty(); // Clear the current list
+
+                selectedFieldNames.forEach(function(name) {
+                    previewList.append('<li>' + name + '</li>');
+                });
+            }
          	
 		});
 		

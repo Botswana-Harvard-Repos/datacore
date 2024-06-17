@@ -38,6 +38,6 @@ def login_page(request):
     """ Function-based view to render login page.
     """
     if request.user.is_authenticated:
-        return redirect(reverse('dashboard'))
+        return redirect(reverse('tsepamo:tsepamo-dashboard'))
     else:
         return render(request, 'authentication/login.html')

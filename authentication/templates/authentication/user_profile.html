@@ -22,33 +22,35 @@
 	    		<div class="d-flex align-items-center justify-content-center mt-4">
 					<div class="col-8">
 	    				<div class="form-outline mb-4" data-mdb-input-init>
-		                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}">
+		                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" readonly>
 		                    <label class="form-label" for="username">Username</label>
 		                </div>
-		  
 
 		                <div class="form-outline mb-4" data-mdb-input-init>
-		                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+		                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" readonly>
 		                    <label class="form-label" for="email">Email</label>
 		                </div>
-
-
 
 	    				<div class="form-outline mb-4" data-mdb-input-init>
 		                    <input type="text" class="form-control" id="firstname" name="firstname" value="{{ user.first_name }}">
 		                    <label class="form-label" for="firstname">First Name</label>
 		                </div>
-	
 		   
 		                <div class="form-outline mb-4" data-mdb-input-init>
 		                    <input type="text" class="form-control" id="lastname" name="lastname" value="{{ user.last_name }}">
 		                    <label class="form-label" for="lastname">Last Name</label>
 		                </div>
 
+		                <div class="d-flex justify-content-center pb-2">
+		                	<div class="vr" style="height: 40px;"></div>
+		                </div>
+
 						<!-- Cancel button -->
 		    		 	<button type="button" id="returnButton" class="btn btn-outline-danger btn-block" data-mdb-ripple-init>Cancel</button>
 		    			<!-- Submit button -->
 		    		 	<button type="submit" class="btn btn-primary btn-block" data-mdb-ripple-init>Update</button>
+		    		 	<!-- Submit button -->
+		    		 	<button type="button" class="btn btn-info btn-block" data-mdb-ripple-init>Change Password</button>
 		    	</div>
              </div>
 	       </form>
@@ -63,7 +65,6 @@
                 var url = "{% url 'tsepamo:tsepamo-dashboard' %}";
                 window.location.href = url;
 	         });
-            
 		</script>
 	{% endblock custom-js %}
 {% endblock %}

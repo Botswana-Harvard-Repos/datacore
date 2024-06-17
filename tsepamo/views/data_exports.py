@@ -18,19 +18,24 @@ exclude_fields = ['id', 'record_id', 'complete']
 @login_required(login_url='/')
 def render_export_reports_page(request, project_names):
     data = [{'tab_item': 'projects',
+             'includes_table': True,
              'table_columns': get_project_columns(),
              'table_id': 'projectsList',
              'data_url': 'tsepamo:projects-details',
              'url_kwargs': {'project_names': project_names}},
             {'tab_item': 'instruments',
+             'includes_table': True,
              'table_columns': get_forms_columns(),
              'table_id': 'instrumentsList',
              'data_url': 'tsepamo:instruments-details',
              'url_kwargs': {'project_names': project_names}},
             {'tab_item': 'fields',
+             'includes_table': True,
              'table_columns': get_fields_columns(),
              'table_id': 'fieldsList',
-             'data_url': '', }]
+             'data_url': '', },
+            {'tab_item': 'preview',
+             'includes_table': False}]
 
     return render(request, 'tsepamo/exports.html', {
         'selected_projects': project_names,
@@ -85,6 +90,8 @@ def fetch_fields_view(request, instrument_names):
         fields_data = []
         for name in instrument_names:
             fields_data.extend(get_fields_by_name(name))
+        # Filter out to get only unique fields details across the projects
+        fields_data = [dict(field_data) for field_data in {tuple(data.items()) for data in fields_data}]
         return JsonResponse(fields_data, safe=False)
 
 
@@ -116,9 +123,7 @@ def export_view(request):
 
         generate_exports.delay(export_name, user_created, [user_email, ], 'tsepamo',
                                export_type, selected_instruments, selected_fields)
-        # export_cls = GenerateDataExports(
-        #     export_name, user_created, 'tsepamo', export_types,
-        #     selected_instruments, selected_fields,)
+
         return JsonResponse(
             {'status': 'CSV export started, you will receive an email once it is ready.'})
 
@@ -171,7 +176,7 @@ def get_fields_by_name(model_name):
     fields_tuple = model_cls._meta.fields
     return [{'name': field.name,
              'verbose_name': field.verbose_name,
-             'instrument_name': model_name,
+             # 'instrument_name': model_name,
              'field_type': field.get_internal_type()} for field in fields_tuple if field.name not in exclude_fields]
 
 
@@ -215,7 +220,8 @@ def get_fields_columns():
     return [{'title': 'Verbose Field Name', 'data': 'verbose_name', },
             {'title': 'Variable Name', 'data': 'name', },
             {'title': 'Field Type', 'data': 'field_type', },
-            {'title': 'Instrument Name', 'data': 'instrument_name', }]
+            # {'title': 'Instrument Name', 'data': 'instrument_name', }
+            ]
 
 
 def get_repository_columns():
