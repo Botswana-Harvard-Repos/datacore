@@ -38,7 +38,7 @@ class LoadCSVData:
 
     def load_model_data(self, data, model_names):
         for model_name in model_names:
-            logger.debug("Model:", model_name)
+            print(f"Model: {model_name}")
             model_cls = django_apps.get_model(model_name)
             model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
 
@@ -71,7 +71,7 @@ class LoadCSVData:
                 # else:
                     create_record = formatted_record.copy()
                     create_record.update(record_id=record.get('record_id'))
-                    logger.debug("Create Record", record.get('record_id'))
+                    print(f"Create Record {record.get('record_id')}")
                     model_cls.objects.create(**create_record)
 
     def load_model_data_all(self, csv_files):
