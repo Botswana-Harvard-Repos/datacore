@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 continue
 
             try:
-                export_project_data_and_send_email(project_name, emails, models)
+                export_project_data_and_send_email.delay(project_name, emails, models)
             except Exception as e:
                 raise CommandError(
                     f'Failed to pull data for {project_name} with {e}, check logs.')
