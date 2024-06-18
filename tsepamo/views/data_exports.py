@@ -54,9 +54,12 @@ def render_projects_page(request):
 def render_repository_page(request):
     latest_file = get_latest_export_file()
     repository_columns = get_repository_columns()
+    download_success = request.GET.get('download_success', False)
+
     return render(request, 'tsepamo/repository.html',
                   {'recent_file': latest_file,
                    'data_url': 'tsepamo:repository-details',
+                   'download_success': download_success,
                    'table_columns': repository_columns})
 
 
@@ -131,12 +134,24 @@ def export_view(request):
 
 
 @login_required(login_url='/')
-def preview_data_view(request, project_name):
+def preview_data_view(request):
+    preview_data = []
     if request.method == 'GET':
-        fields_list = get_fields_from_request(request)
-        model_cls = django_apps.get_model('tsepamo', project_name)
-        data = list(model_cls.objects.values(*fields_list))
-        return JsonResponse(data, safe=False)
+        fields_list = str_to_list_from_request(request, 'fields')
+        forms_list = str_to_list_from_request(request, 'instruments')
+        model_cls = django_apps.get_model('tsepamo', forms_list[0])
+        records = model_cls.objects.values_list('record_id', flat=True)[:10]
+        for record_id in records:
+            record = {'record_id': record_id}
+            for model_name in forms_list:
+                model_cls = django_apps.get_model('tsepamo', model_name)
+                model_fields = [field.name for field in model_cls._meta.fields]
+                related_fields = [field for field in fields_list if field in model_fields]
+                data = model_cls.objects.filter(record_id=record_id).values(*related_fields)
+                record.update(data[0])
+            preview_data.append(record)
+
+        return JsonResponse(preview_data, safe=False)
 
 
 def download_export_file_view(request, file_name):
@@ -165,10 +180,10 @@ def get_repository_details():
     return records
 
 
-def get_fields_from_request(request):
-    selected_fields = request.GET.get('fields', '')
-    fields_list = selected_fields.split(',')
-    return fields_list
+def str_to_list_from_request(request, var_name):
+    str_ = request.GET.get(var_name, '')
+    list_data = str_.split(',')
+    return list_data
 
 
 def get_fields_by_name(model_name):

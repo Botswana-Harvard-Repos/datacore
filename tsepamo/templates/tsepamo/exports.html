@@ -9,10 +9,7 @@
    		#main-container {
    			overflow: hidden;		
    		}
-		.nowrap {
-            white-space: nowrap;
-        }
-        
+
         /* Spinner Styles */
         #spinner-overlay {
            	position: fixed;
@@ -23,6 +20,7 @@
            	background-color: rgba(0, 0, 0, 0.5);
            	z-index: 9999;
         }
+       
    	</style>
 {% endblock custom-css %}
 
@@ -47,11 +45,6 @@
 	</div>
 
 	<div class="row gy-5">
-		<div id="notification" class="alert alert-success alert-dismissible fade show d-none" role="alert">
-			Export has been successfully generated, an email will be sent once ready.
-			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-		</div>
-
 		<div class="d-flex align-items-center justify-content-end">
 			<button type="button" class="btn btn-primary" id="exportButton" data-mdb-ripple-init>
 				Generate Export <i class="fa-solid fa-file-export ms-2"></i>
@@ -130,7 +123,19 @@
 			           			{% endif %}
 			           		</div>
 			           	{% else %}
-			           		<ul id="preview-list"></ul>
+			           		<div class="table-responsive-sm">
+				           		<!-- Table to display the data -->
+							    <table id="preview-dataTable" class="table table-sm align-middle mb-0 bg-white display nowrap" style="width:100%">
+							        <thead class="bg-light">
+							            <tr id="preview-tableHeaders">
+							                <!-- Headers will be dynamically added here -->
+							            </tr>
+							        </thead>
+							        <tbody>
+							            <!-- Data will be dynamically added here -->
+							        </tbody>
+							    </table>
+							 </div>
 			           	{% endif %}
 		           </div>
 		       {% endfor %}
@@ -279,7 +284,7 @@
                      	// Show the notification
                         $('#notification').removeClass('d-none');
                      	// Handle success response
-                        window.location.href = "{% url 'tsepamo:repository' %}";
+                        window.location.href = "{% url 'tsepamo:repository' %}?download_success=True";
                     },
                     error: function(error) {
                         // Handle error response
@@ -290,20 +295,43 @@
                 });
             });
          	
+            let dataTable;
+ 
          	// Add a click event listener to all tab links
             $('#preview-tab').click(function(event) {
-              event.preventDefault(); // Prevent the default action (navigation)
-
-              updatePreviewTab();
+              updatePreviewTable();
             });
          	
-            function updatePreviewTab() {
+            function updatePreviewTable() {
+            	$.ajax({
+                    url: '{% url "tsepamo:preview-data" %}',
+                    data: {
+                        fields: selectedFieldNames.join(','),
+                        instruments: selectedInstrumentNames.join(',')
+                    },
+                    success: function(data) {
+                    	// Destroy existing DataTable if it exists
+                        if ($.fn.dataTable.isDataTable('#preview-dataTable')) {
+                            dataTable.clear().destroy();
+                            $('#preview-tableHeaders').empty();
+                        }
 
-                var previewList = $('#preview-list');
-                previewList.empty(); // Clear the current list
+                        // Add headers
+                        selectedFieldNames.unshift('record_id');
+                        selectedFieldNames.forEach(function(field) {
+                            $('#preview-tableHeaders').append('<th data-dt-order="disable">' + field + '</th>');
+                        });
 
-                selectedFieldNames.forEach(function(name) {
-                    previewList.append('<li>' + name + '</li>');
+                        // Initialize DataTable
+                        dataTable = $('#preview-dataTable').DataTable({
+                            data: data,
+                            columns: selectedFieldNames.map(function(field) {
+                                return { data: field };
+                            }),
+                            scrollX: true,
+                            bLengthChange: false,
+                        });
+                    }
                 });
             }
          	

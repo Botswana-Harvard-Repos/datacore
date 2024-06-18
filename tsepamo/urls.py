@@ -52,7 +52,8 @@ urlpatterns = [
     path('instruments/details/<str:project_names>/', form_data_view, name='instruments-details'),
     path('instruments/fields/<str:instrument_names>/', fetch_fields_view, name='fetch-fields'),
 
+    path('fields/preview/', preview_data_view, name='preview-data'),
+
     path('api/projects/<str:project_name>/fields/', project_fields, name='project-fields'),
     path('api/exports/', export_view, name='generate-export'),
-    path('api/preview/<str:project_name>/', preview_data_view, name='preview-data')
 ]
