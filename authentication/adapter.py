@@ -7,6 +7,7 @@ from allauth.account.utils import send_email_confirmation
 from datetime import timedelta
 
 from django import forms
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.urls import reverse
 
@@ -114,3 +115,7 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         url = reverse('authentication:account_confirm_email', args=[emailconfirmation.key])
         ret = build_absolute_uri(request, url)
         return ret
+
+    def respond_email_verification_sent(self, request, user):
+        return HttpResponseRedirect(
+            reverse('authentication:account_email_verification_sent'))
