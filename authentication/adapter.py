@@ -2,12 +2,13 @@ from allauth import ratelimit
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.app_settings import EmailVerificationMethod
 from allauth.account import app_settings
-from allauth.utils import get_user_model
+from allauth.utils import get_user_model, build_absolute_uri
 from allauth.account.utils import send_email_confirmation
 from datetime import timedelta
 
 from django import forms
 from django.utils import timezone
+from django.urls import reverse
 
 from .utils import email_address_exists, has_verified_email
 from .models import set_email_as_primary
@@ -108,3 +109,8 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             if not has_verified_email(user, email):
                 send_email_confirmation(request, user, signup=signup, email=email)
                 return self.respond_email_verification_sent(request, user)
+
+    def get_email_confirmation_url(self, request, emailconfirmation):
+        url = reverse('authentication:account_confirm_email', args=[emailconfirmation.key])
+        ret = build_absolute_uri(request, url)
+        return ret

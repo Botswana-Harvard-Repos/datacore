@@ -185,12 +185,11 @@ DEFAULT_FROM_EMAIL = config['email_conf'].get('email_user')
 EMAIL_HOST_USER = config['email_conf'].get('email_user')
 EMAIL_HOST_PASSWORD = config['email_conf'].get('email_host_pwd')
 
+
 REDCAP_API_URL = config['redcap_conf'].get('api_url')
 REDCAP_API_KEYS = config['redcap_conf'].get('project_tokens')
 
-EMAIL_CONFIRM_REDIRECT_BASE_URL = 'http://localhost:8001/email/confirm/'
-
-PASSWORD_RESET_CONFIRM_REDIRECT_BASE_URL = 'http://localhost:8001/password-reset/confirm/'
+PASSWORD_RESET_CONFIRM_REDIRECT_BASE_URL = 'password_reset_confirm'
 
 MERCURY_URL = 'http://127.0.0.1:8000/app/tsepamo'
 

@@ -9,12 +9,15 @@ from dj_rest_auth.views import (
     PasswordResetView,
 )
 
-from .views.custom_rest_views import email_confirm_redirect, password_reset_confirm_redirect
-from .views.custom_rest_views import VerifyEmailView
-from .views import user_profile_page
 from dj_rest_auth.registration.views import RegisterView
 from dj_rest_auth.views import LoginView, LogoutView, UserDetailsView
 from django.urls import path
+from django.views.generic.base import TemplateView
+
+from .views.custom_rest_views import CustomConfirmEmailView, password_reset_confirm_redirect
+from .views.custom_rest_views import VerifyEmailView
+from .views import user_profile_page
+
 
 app_name = 'authentication'
 
@@ -27,7 +30,7 @@ urlpatterns = [
 
     path('register/verify-email/', VerifyEmailView.as_view(), name='rest_verify_email'),
     path('register/resend-email/', ResendEmailVerificationView.as_view(), name='rest_resend_email'),
-    path('account-confirm-email/<str:key>/', email_confirm_redirect, name='account_confirm_email'),
+    path('account-confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
     path('account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
     path('password/reset/', PasswordResetView.as_view(), name='rest_password_reset'),
     path(
@@ -39,4 +42,7 @@ urlpatterns = [
 
     # Custom URLs
     path('user/profile/', user_profile_page, name='user_profile'),
+
+    path('password-reset/confirm/', TemplateView.as_view(template_name='password_reset_confirm.html'),
+         name='password_reset_confirm'),
 ]
