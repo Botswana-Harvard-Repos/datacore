@@ -107,6 +107,11 @@
      	// Handle click on individual checkboxes
         $('#{{ table_id }} tbody').on('change', 'input[type="checkbox"]', function() {
         	var selectedName = table.row($(this).closest('tr')).data().name;
+
+        	var selectedType = table.row($(this).closest('tr')).data().field_type;
+        	if(selectedType !== undefined && selectedName) {
+        		selectedName = selectedName + ':' + selectedType;
+        	}
        
             // If checkbox is not checked
             if(!this.checked) {

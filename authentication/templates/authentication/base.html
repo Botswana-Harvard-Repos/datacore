@@ -6,18 +6,40 @@
 	    <meta charset="UTF-8">
 	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	    <title>{% block title %}Login - Datacore{% endblock %}</title>
-	    <!-- Include MDB CSS -->
-	    <link href="{% static 'mdb5/css/mdb.min.css' %}" rel="stylesheet" type="text/css"/>
+	    <!-- Font Awesome -->
+	    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css" />
 	    <!-- Google Fonts -->
 	  	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+	  	<!-- Include MDB CSS -->
+	    <link href="{% static 'mdb5/css/mdb.min.css' %}" rel="stylesheet" type="text/css"/>
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/dataTables.bootstrap5.css' %}" />
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/searchPanes.dataTables.min.css' %}" />
+	    
+	    <link rel="stylesheet" href="{% static 'datatables/css/select.dataTables.min.css' %}" />
+	   	<!-- Include JQuery -->
+	    <script src="{% static 'datacore/js/jquery.min.js' %}"></script>
+	    {% block custom-css %}
+	  		{{block.super}}
+	  	{% endblock custom-css %}
 	</head>
 	<body>
 		<!-- Content -->
-	    <div class="container mt-5">
-	        {% block content %}
-	        <!-- Default content -->
-	        {% endblock %}
-	    </div>
+        {% block content %}
+        <!-- Default content -->
+        {% endblock %}
+
+	    
+	    <!--Footer-->
+		<footer class="bg-body-tertiary text-lg-start fixed-bottom">			
+			<!-- Copyright -->
+			<div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+				© 2024 Copyright: <a class="text-body" href="/">Botswana Harvard Health Partnership</a>
+			</div>
+			<!-- Copyright -->
+		</footer>
+  		<!--Footer-->
 	 
 	 	{% block custom-js %}
 		 	<!-- Include MDB JavaScript -->

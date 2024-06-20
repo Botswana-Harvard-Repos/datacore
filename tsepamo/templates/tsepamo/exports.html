@@ -84,6 +84,24 @@
 				  </ul>
 				</div>
 			</div>
+			<div class="col">
+				<!-- Buttons trigger collapse -->
+				<a
+				  class="btn btn-outline-info"
+				  data-mdb-collapse-init
+				  data-mdb-ripple-init
+				  href="#collapseFilters"
+				  role="button"
+				  aria-expanded="false"
+				  aria-controls="collapseFilters"
+				>
+					<i class="fa-solid fa-filter me-2"></i> Filters
+				</a>
+			</div>
+		</div>
+		<!-- Collapsed content -->
+		<div class="collapse row justify-content-around p-5" id="collapseFilters">
+			<!-- Date range fields will be dynamically added here -->
 		</div>
 		<div>
 			<ul class="nav nav-tabs" id="exportTabs" role="tablist">
@@ -232,16 +250,43 @@
 
             	// Merge the new selections with the existing ones
                 selectedNames.forEach(name => {
-                    if (!selectedFieldNames.includes(name)) {
-                        selectedFieldNames.push(name);
+                    if (!selectedFieldNames.includes(name.split(':')[0])) {
+                        selectedFieldNames.push(name.split(':')[0]);
                     }
                 });
             	
              	// Remove deselected fields
-                selectedFieldNames = selectedFieldNames.filter(name => selectedNames.includes(name));
+                selectedFieldNames = selectedFieldNames.filter(fieldName => {
+                	return selectedNames.some(name => name.split(':')[0] === fieldName);
+                });
  
+                const dateFieldNames = selectedNames.filter(name => {
+                	let namePart = name.split(':')[0];
+                	let typePart = name.split(':')[1];
+                	if (typePart === 'DateField' || typePart === 'DateTimeField') {
+                		return selectedFieldNames.includes(namePart);
+                	}
+                }).map(name => name.split(':')[0]);
+             	console.log(selectedFieldNames);
+             	console.log(dateFieldNames);
                 updateSelectedFieldsCount();
+                updateFilterSection(dateFieldNames);
             });
+         	
+         	function updateFilterSection(selectedDateFields) {
+         		$('#collapseFilters').empty();
+         		selectedDateFields?.forEach(name => {
+         			$('#collapseFilters').append(`
+         				<div class="form-group col-md-4 mb-3" id="filter-${name}">
+    		                <label>${name}:</label>
+    		                <div class="d-flex">
+    		                	<input type="date" name="start_date_${name}" class="form-control me-2" placeholder="Start Date">
+    		                	<input type="date" name="end_date_${name}" class="form-control" placeholder="End Date">
+    		                </div>
+    		            </div>
+         			`);
+         		});
+         	}
 
          	// Export button click handler
             $('#exportButton').click(function() {
