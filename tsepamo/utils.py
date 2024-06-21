@@ -51,11 +51,25 @@ class LoadCSVData:
                     if isinstance(field, DateTimeField):
                         try:
                             value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
+                        except ValueError:
+                            try:
+                                value = datetime.strptime(value, '%Y-%d-%m %H:%M')  if value else value
+                            except ValueError:
+                                raise
+                            except TypeError:
+                                pass
                         except TypeError:
                             pass
                     if isinstance(field, DateField):
                         try:
                             value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
+                        except ValueError:
+                            try:
+                                value = datetime.strptime(value, '%Y-%d-%m').date() if value else value
+                            except ValueError:
+                                raise
+                            except TypeError:
+                                pass
                         except TypeError:
                             pass
                     if isinstance(field, IntegerField):

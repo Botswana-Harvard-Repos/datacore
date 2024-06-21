@@ -81,7 +81,7 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
         # Export total records to get count
         total_records = project.export_records(fields=['record_id'])
         total_count = len(total_records)
-        chunk_size = 1000
+        chunk_size = 500
 
         all_data = []
 
