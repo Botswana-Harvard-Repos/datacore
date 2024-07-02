@@ -8,7 +8,6 @@ from io import BytesIO
 
 from .models import ExportFile
 
-
 upload_folder = settings.MEDIA_ROOT
 
 
@@ -130,7 +129,8 @@ class GenerateDataExports:
             response.raise_for_status()
 
     def get_export_filename(self):
-        date_str = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+        current_datetime = datetime.datetime.now()
+        date_str = current_datetime.strftime('%Y-%m-%d_%H:%M')
         filename = "%s-%s" % (self.export_name, date_str)
         return filename
 
@@ -141,3 +141,49 @@ class GenerateDataExports:
             name=file_name,
             user_created=self.user_created,
             file=upload_to + file_name, )
+
+
+def generate_model_data_dict(model_name):
+
+    def write_to_csv(records, filename):
+        """ Write data to csv format and returns response
+        """
+        df = pd.DataFrame(records)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename={filename}.csv'
+        df.to_csv(path_or_buf=response, index=False)
+        return response
+
+    model_cls = django_apps.get_model('tsepamo', model_name)
+    # Define the output file
+    output_file = f'{model_name.lower()}_data_dictionary.csv'
+
+    records = []
+
+    for field in model_cls._meta.fields:
+        field_name = field.name
+        field_type = field.get_internal_type()
+        max_length = getattr(field, 'max_length', '')
+        other_attributes = []
+
+        # Check for other relevant field attributes
+        if field.blank:
+            other_attributes.append('blank=True')
+        if field.null:
+            other_attributes.append('null=True')
+        if hasattr(field, 'auto_now_add') and field.auto_now_add:
+            other_attributes.append('auto_now_add=True')
+        if hasattr(field, 'auto_now') and field.auto_now:
+            other_attributes.append('auto_now=True')
+
+        # Write the row for this field
+        records.append({
+            'Form Name': model_name,
+            'Field Name': field_name,
+            'Field Type': field_type,
+            'Max Length': max_length,
+            'Other Attributes': ', '.join(other_attributes)
+        })
+
+    return write_to_csv(records, output_file)

@@ -92,5 +92,3 @@ class LoadCSVData:
         for csv_file, model_names in csv_files:
             data = self.read_csv_data(csv_file)
             self.load_model_data(data, model_names)
-
-

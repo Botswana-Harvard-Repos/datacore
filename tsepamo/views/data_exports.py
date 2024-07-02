@@ -5,10 +5,12 @@ from django.conf import settings
 from django.http.response import JsonResponse, HttpResponse
 from django.http import Http404
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from ..models import Projects, InstrumentsMeta, ExportFile
 from ..tasks import generate_exports
+from ..export_utils import generate_model_data_dict
 
 upload_folder = settings.MEDIA_ROOT
 
@@ -66,8 +68,18 @@ def render_repository_page(request):
 @login_required(login_url='/')
 def render_dashboard_page(request):
     project_details = get_project_details()
+    metadata_options = []
+    for project in project_details:
+        instruments = get_forms_by_project_name(project.get('name'))
+        for instrument in instruments:
+            url_download = reverse('tsepamo:generate-data-dict', args=[instrument])
+            metadata_options.append(
+                {'project_name': project.get('name'),
+                 'instrument_name': instrument,
+                 'url_download': url_download})
+
     return render(request, 'tsepamo/dashboard.html', {
-        'project_details': project_details})
+        'project_details': project_details, 'metadata_options': metadata_options})
 
 
 @login_required(login_url='/')
@@ -138,20 +150,26 @@ def preview_data_view(request):
     preview_data = []
     if request.method == 'GET':
         fields_list = str_to_list_from_request(request, 'fields')
-        forms_list = str_to_list_from_request(request, 'instruments')
-        model_cls = django_apps.get_model('tsepamo', forms_list[0])
-        records = model_cls.objects.values_list('record_id', flat=True)[:10]
-        for record_id in records:
-            record = {'record_id': record_id}
-            for model_name in forms_list:
-                model_cls = django_apps.get_model('tsepamo', model_name)
-                model_fields = [field.name for field in model_cls._meta.fields]
-                related_fields = [field for field in fields_list if field in model_fields]
-                data = model_cls.objects.filter(record_id=record_id).values(*related_fields)
-                record.update(data[0])
-            preview_data.append(record)
+        # forms_list = str_to_list_from_request(request, 'instruments')
+        # model_cls = django_apps.get_model('tsepamo', forms_list[0])
+        # records = model_cls.objects.values_list('record_id', flat=True)[:10]
+        record = {'record_id': 'sample_id'}
+        for field in fields_list:
+            record.update({f'{field}': ''})
+            # for model_name in forms_list:
+            #     model_cls = django_apps.get_model('tsepamo', model_name)
+            #     model_fields = [field.name for field in model_cls._meta.fields]
+            #     related_fields = [field for field in fields_list if field in model_fields]
+            #     data = model_cls.objects.filter(record_id=record_id).values(*related_fields)
+            #     record.update(data[0])
+        preview_data.append(record)
 
         return JsonResponse(preview_data, safe=False)
+
+
+@login_required(login_url='/')
+def generate_data_dict_view(request, model_name):
+    return generate_model_data_dict(model_name)
 
 
 def download_export_file_view(request, file_name):
@@ -201,7 +219,8 @@ def get_project_details(project_names=[]):
 
     for project in projects:
         related_models = get_related_models_info(project)
-        records_count = sum([related_info.get('records_count') for related_info in related_models])
+
+        records_count = sum([related_info.get('records_count') for related_info in related_models if related_info.get('name', '').startswith('tsepamo')])
         details.append({'name': project.name,
                         'id': project.id,
                         'verbose_name': project.verbose_name,
@@ -257,8 +276,8 @@ def get_related_models_info(instance, app_label='tsepamo', ):
     """
     related_models = []
 
-    instruments_meta = InstrumentsMeta.objects.filter(
-        related_project=instance.name).values_list('form_name', flat=True)
+    instruments_meta = get_forms_by_project_name(instance.name)
+
     for model_name in instruments_meta:
         related_model_cls = django_apps.get_model(app_label, model_name)
         related_model_name = related_model_cls._meta.model_name
@@ -270,6 +289,11 @@ def get_related_models_info(instance, app_label='tsepamo', ):
              'verbose_name': related_model_cls._meta.verbose_name,
              'records_count': records_count})
     return related_models
+
+
+def get_forms_by_project_name(project_name):
+    return InstrumentsMeta.objects.filter(
+        related_project=project_name).values_list('form_name', flat=True)
 
 
 def get_projects_by_name(project_names=[]):

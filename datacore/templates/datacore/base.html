@@ -201,6 +201,8 @@
 		<script src="{% static 'datatables/js/dataTables.bootstrap5.js' %}"></script>
 		<script src="{% static 'datatables/js/dataTables.searchPanes.min.js' %}"></script>
 		<script src="{% static 'datatables/js/dataTables.select.min.js' %}"></script>
+		<!-- Include DataTables date sorting plugin for better date sorting -->
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.4.0/luxon.min.js"></script>
 		{% block custom-js %}
 			<!-- Additional JS -->
 			<script>

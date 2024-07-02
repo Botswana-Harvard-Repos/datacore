@@ -5,7 +5,7 @@ from django.urls import path
 from .views import (render_export_reports_page, project_fields, export_view,
                     preview_data_view, render_projects_page, render_repository_page,
                     project_data_view, form_data_view, fetch_fields_view, repository_data_view,
-                    download_export_file_view, render_dashboard_page)
+                    download_export_file_view, render_dashboard_page, generate_data_dict_view)
 
 app_name = 'tsepamo'
 
@@ -53,6 +53,8 @@ urlpatterns = [
     path('instruments/fields/<str:instrument_names>/', fetch_fields_view, name='fetch-fields'),
 
     path('fields/preview/', preview_data_view, name='preview-data'),
+
+    path('generate_data_dict/<str:model_name>/', generate_data_dict_view, name='generate-data-dict'),
 
     path('api/projects/<str:project_name>/fields/', project_fields, name='project-fields'),
     path('api/exports/', export_view, name='generate-export'),

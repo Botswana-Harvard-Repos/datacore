@@ -6,7 +6,7 @@
         	{% if show_checkbox %}
              	<th data-dt-order="disable">
              		{% if allow_select_all %}
- 						<input class="form-check-input" type="checkbox" id="select-all">
+ 						<input class="form-check-input" type="checkbox" id="select-all-{{table_id}}">
  					{% endif %}
  				</th>
  			{% endif %}
@@ -66,6 +66,25 @@
 	            	}
 	            },
             {% endif %}
+	        {% if date_sort %}
+		        "columnDefs": [
+		        	{ 
+		        		targets: 2, // Assuming 'Date' column is index 0
+		                render: function(data, type, row) {
+		                    // Parse date using Luxon DateTime
+		                    const dt = luxon.DateTime.fromFormat(data, 'yyyy-MM-dd HH:mm');
+		                    
+		                    // Return formatted date for display
+		                    if (type === 'display' || type === 'type') {
+		                        return dt.toFormat('dd-MM-yyyy HH:mm');
+		                    }
+		                    
+		                    // Return ISO 8601 format for sorting
+		                    return dt.toISO();
+		                }
+		        	}
+		        ],
+	        {% endif %}
             "createdRow": function(row, data, dataIndex) {
             	if (data.records === 0 || data.records_count == 0) {
             		$(row).find('input.row-checkbox').attr('disabled', true);
@@ -74,7 +93,7 @@
             },
             "initComplete": function() {
                 if (disableSelectAll) {
-                    $('#select-all').attr('disabled', true);
+                    $('#select-all-{{table_id}}').attr('disabled', true);
                 }
             }
         });
@@ -82,7 +101,7 @@
         var selectedNames = new Set();
 
      	// Handle click on select all control
-        $('#select-all').on('click', function(){
+        $('#select-all-{{table_id}}').on('click', function(){
         	var isChecked = $(this).is(':checked');
  
             // Get all rows with search applied
@@ -115,7 +134,7 @@
        
             // If checkbox is not checked
             if(!this.checked) {
-               var el = $('#select-all').get(0);
+               var el = $('#select-all-{{table_id}}').get(0);
                // If "select all" control is checked and has 'indeterminate' property
                if(el && el.checked && ('indeterminate' in el)) {
                    // Set visual state of "select all" control
@@ -131,7 +150,7 @@
   
             // If all checkboxes are checked, set "select all" to checked
             var allChecked = table.$('input[type="checkbox"]').length === table.$('input[type="checkbox"]:checked').length;
-            $('#select-all').prop('checked', allChecked);
+            $('#select-all-{{table_id}}').prop('checked', allChecked);
             
             $(document).trigger('{{table_id}}checkboxChanged', [getSelectedNames()]);
         });

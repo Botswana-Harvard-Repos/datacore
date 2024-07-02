@@ -85,24 +85,36 @@
 				</div>
 			</div>
 			<div class="col">
-				<!-- Buttons trigger collapse -->
-				<a
-				  class="btn btn-outline-info"
-				  data-mdb-collapse-init
-				  data-mdb-ripple-init
-				  href="#collapseFilters"
-				  role="button"
-				  aria-expanded="false"
-				  aria-controls="collapseFilters"
-				>
-					<i class="fa-solid fa-filter me-2"></i> Filters
-				</a>
+				<button type="button" class="btn btn-outline-info" data-mdb-ripple-init data-mdb-modal-init data-mdb-target="#fieldSelectionModal">
+				    <i class="fa-solid fa-filter me-2"></i> Date Filters
+				</button>
 			</div>
 		</div>
 		<!-- Collapsed content -->
 		<div class="collapse row justify-content-around p-5" id="collapseFilters">
 			<!-- Date range fields will be dynamically added here -->
 		</div>
+		
+		<div class="modal" id="fieldSelectionModal" tabindex="-1" aria-labelledby="fieldSelectionModalLabel" aria-hidden="true">
+		    <div class="modal-dialog">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="fieldSelectionModalLabel">Select Date Filter Fields:</h5>
+		                <button type="button" class="btn-close" data-mdb-ripple-init data-mdb-dismiss="modal" aria-label="Close"></button>
+		            </div>
+		            <div class="modal-body">
+		                <form id="fieldSelectionForm">
+
+		                </form>
+		            </div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-secondary" data-mdb-ripple-init data-mdb-dismiss="modal">Close</button>
+		                <button type="button" class="btn btn-primary" id="applySelection" data-mdb-ripple-init>Apply</button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+		
 		<div>
 			<ul class="nav nav-tabs" id="exportTabs" role="tablist">
 			{% for data_item in data %}
@@ -132,10 +144,8 @@
 		           		aria-labelledby="{{ data_item.tab_item }}-tab">
 		           		{% if data_item.includes_table %}
 			           		<div class="table-responsive-sm">
-			           			{% if data_item.tab_item == 'instruments' %}
+			           			{% if data_item.tab_item == 'instruments' or data_item.tab_item == 'fields' %}
 			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True include_seach_panes=False %}
-			           			{% elif data_item.tab_item == 'fields' %}
-			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=True allow_select_all=False include_seach_panes=False %}
 			           			{% else %}
 			           				{% render_datatable data_url=data_item.data_url url_kwargs=data_item.url_kwargs columns=data_item.table_columns table_id=data_item.table_id show_checkbox=False include_seach_panes=False %}
 			           			{% endif %}
@@ -274,18 +284,46 @@
             });
          	
          	function updateFilterSection(selectedDateFields) {
-         		$('#collapseFilters').empty();
+         		$('#fieldSelectionForm').empty();
          		selectedDateFields?.forEach(name => {
-         			$('#collapseFilters').append(`
-         				<div class="form-group col-md-4 mb-3" id="filter-${name}">
+         			$('#fieldSelectionForm').append(`
+         				<div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="field_${name}" value="${ name }">
+                            <label class="form-check-label" for="field_${ name }">${ name }</label>
+                        </div>
+         			`);
+         		});
+         	}
+         	
+         	$('#applySelection').on('click', function() {
+                var selectedFields = [];
+                $('#fieldSelectionForm input[type="checkbox"]:checked').each(function() {
+                    selectedFields.push($(this).val());
+                });
+
+                updateCollapsedContent(selectedFields);
+            });
+         	
+         	function updateCollapsedContent(fields) {
+         		$('#collapseFilters').empty();
+
+         	    fields.forEach(name => {
+         	    	$('#collapseFilters').append(`
+         	    		<div class="form-group col-md-4 mb-3" id="filter-${name}">
     		                <label>${name}:</label>
     		                <div class="d-flex">
     		                	<input type="date" name="start_date_${name}" class="form-control me-2" placeholder="Start Date">
     		                	<input type="date" name="end_date_${name}" class="form-control" placeholder="End Date">
     		                </div>
     		            </div>
-         			`);
-         		});
+         	        `);
+         	    });
+
+         	    if (fields.length === 0) {
+         	    	$('#collapseFilters').collapse('hide');
+         	    } else {
+         	    	$('#collapseFilters').collapse('show');
+         	    }
          	}
 
          	// Export button click handler
@@ -344,9 +382,10 @@
  
          	// Add a click event listener to all tab links
             $('#preview-tab').click(function(event) {
-              updatePreviewTable();
+            	event.preventDefault();
+              	updatePreviewTable();
             });
-         	
+
             function updatePreviewTable() {
             	$.ajax({
                     url: '{% url "tsepamo:preview-data" %}',
@@ -362,7 +401,10 @@
                         }
 
                         // Add headers
-                        selectedFieldNames.unshift('record_id');
+                        if (!selectedFieldNames.includes('record_id')) {
+                        	selectedFieldNames.unshift('record_id');
+                        }
+
                         selectedFieldNames.forEach(function(field) {
                             $('#preview-tableHeaders').append('<th data-dt-order="disable">' + field + '</th>');
                         });

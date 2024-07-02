@@ -7,13 +7,15 @@ register = template.Library()
 @register.inclusion_tag('tsepamo/custom_table.html')
 def render_datatable(data_url, columns, table_id='default', url_kwargs={},
                      show_checkbox=True, allow_select_all=True,
-                     include_seach_panes=True, download_action=False):
+                     include_seach_panes=True, download_action=False,
+                     date_sort=False):
 
     data_url = reverse(data_url, kwargs=url_kwargs) if data_url else ""
     return {
         'data_url': data_url,
         'columns': columns,
         'table_id': table_id,
+        'date_sort': date_sort,
         'show_checkbox': show_checkbox,
         'allow_select_all': allow_select_all,
         'download_action': download_action,

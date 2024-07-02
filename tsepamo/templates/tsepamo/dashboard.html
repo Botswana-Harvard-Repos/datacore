@@ -28,6 +28,37 @@
 				      <div class="text-muted">{{ project.records }}</div>
 				    </div>
 				 </div>
+				 <div class="row gx-2 pt-2">
+					 <!-- Button triggers collapse -->
+					 <a
+						  class="btn btn btn-outline-info mb-3"
+						  data-mdb-collapse-init
+						  data-mdb-ripple-init
+						  href="#collapse{{project.name}}"
+						  role="button"
+						  aria-expanded="false"
+						  aria-controls="collapseDataDict">
+						  Download Data Dictionary
+					</a>
+						
+					<!-- Collapsed content -->
+					<div class="collapse scroll-section" id="collapse{{project.name}}"  style="max-width: 500px">
+						{% for options in metadata_options %}
+							{% if options.project_name == project.name %}
+								 <div class="row gx-2">
+								 	<div class="col">
+								      <div class="text-muted">{{options.instrument_name}}</div>
+								    </div>
+								    <div class="col">
+								      <div class="text-muted">
+								      	<a href="{{ options.url_download }}"><i class="fa-solid fa-save me-2"></i>Download</a>
+								      </div>
+								    </div>
+								 </div>
+							{% endif %}
+						{% endfor %}
+					</div>
+				</div>
 			  </div>
 			</div>
 		</div>

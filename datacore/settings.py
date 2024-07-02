@@ -198,7 +198,7 @@ MERCURY_URL = 'http://127.0.0.1:8000/app/tsepamo'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Gaborone'
 
 USE_I18N = True
 
