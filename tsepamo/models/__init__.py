@@ -16,6 +16,6 @@ from .personal_identifiers_four import PersonalIdentifiersFour
 from .switcher_ipms_four import SwitcherIpmsFour
 from .projects import Projects, InstrumentsMeta
 from .outcomes import Outcomes
-from .personal_identifiers import Personal_identifiers
+from .personal_identifiers import PersonalIdentifiers
 from .tsepamo import Tsepamo
 from .switcher_ipms import SwitcherIpms
