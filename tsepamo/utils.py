@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 from decimal import Decimal
+from bson.decimal128 import Decimal128
 from django.apps import apps as django_apps
 from django.db.models import (DateTimeField, DateField, IntegerField,
                               DecimalField)
@@ -48,7 +49,8 @@ class LoadCSVData:
                     value = record.get(field_name)
                     if field_name == 'record_id':
                         continue
-                    self.format_fields(field,field_name,value)
+                    formatted_value=self.format_fields(field,value)
+                    formatted_record[field_name] = formatted_value
                 model_objs = model_cls.objects.filter(
                     record_id=record.get('record_id'), )
                 if not model_objs:
@@ -65,8 +67,7 @@ class LoadCSVData:
             self.load_model_data(data, model_names)
 
 
-    def format_fields(self,field,field_name,value):
-        formatted_record = {}
+    def format_fields(self,field,value):
         if isinstance(field, DateTimeField):
             try:
                 value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
@@ -79,7 +80,7 @@ class LoadCSVData:
                     pass
             except TypeError:
                 pass
-        if isinstance(field, DateField):
+        elif isinstance(field, DateField):
             try:
                 value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
             except ValueError:
@@ -91,11 +92,14 @@ class LoadCSVData:
                     pass
             except TypeError:
                 pass
-        if isinstance(field, IntegerField):
+        elif isinstance(field, IntegerField):
             value = int(value) if value else value
-        if isinstance(field, DecimalField):
+        elif isinstance(field, DecimalField):
+            if isinstance(value, Decimal128):
+                value = value.to_decimal()
             value = Decimal(value) if value else value
-        formatted_record[field_name] = None if value == '' else value
+
+        return None if value == '' else value
 
 
         

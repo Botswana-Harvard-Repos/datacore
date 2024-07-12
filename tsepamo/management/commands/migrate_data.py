@@ -60,7 +60,13 @@ class Command(BaseCommand):
 
 
     def format_all_fields(self, model, data):
-            for field_name, value in data.items():
-                field = model._meta.get_field(field_name)
-                print(model,field,field_name)
-                self.tsepamo_data.format_fields(field, field_name, value)
+        model_fields = {field.name: field for field in model._meta.fields}
+        formatted_data = {}
+        
+        for field_name, field in model_fields.items():
+            value = data.get(field_name)
+            if field_name == 'record_id':
+                continue
+            formatted_data[field_name] = self.tsepamo_data.format_fields(field, value)
+
+        data.update(formatted_data)
