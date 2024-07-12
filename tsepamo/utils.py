@@ -48,36 +48,7 @@ class LoadCSVData:
                     value = record.get(field_name)
                     if field_name == 'record_id':
                         continue
-                    if isinstance(field, DateTimeField):
-                        try:
-                            value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
-                        except ValueError:
-                            try:
-                                value = datetime.strptime(value, '%Y-%d-%m %H:%M')  if value else value
-                            except ValueError:
-                                raise
-                            except TypeError:
-                                pass
-                        except TypeError:
-                            pass
-                    if isinstance(field, DateField):
-                        try:
-                            value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
-                        except ValueError:
-                            try:
-                                value = datetime.strptime(value, '%Y-%d-%m').date() if value else value
-                            except ValueError:
-                                raise
-                            except TypeError:
-                                pass
-                        except TypeError:
-                            pass
-                    if isinstance(field, IntegerField):
-                        value = int(value) if value else value
-                    if isinstance(field, DecimalField):
-                        value = Decimal(value) if value else value
-                    formatted_record[field_name] = None if value == '' else value
-
+                    self.format_fields(field,field_name,value)
                 model_objs = model_cls.objects.filter(
                     record_id=record.get('record_id'), )
                 if not model_objs:
@@ -92,3 +63,39 @@ class LoadCSVData:
         for csv_file, model_names in csv_files:
             data = self.read_csv_data(csv_file)
             self.load_model_data(data, model_names)
+
+
+    def format_fields(self,field,field_name,value):
+        formatted_record = {}
+        if isinstance(field, DateTimeField):
+            try:
+                value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
+            except ValueError:
+                try:
+                    value = datetime.strptime(value, '%Y-%d-%m %H:%M')  if value else value
+                except ValueError:
+                    raise
+                except TypeError:
+                    pass
+            except TypeError:
+                pass
+        if isinstance(field, DateField):
+            try:
+                value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
+            except ValueError:
+                try:
+                    value = datetime.strptime(value, '%Y-%d-%m').date() if value else value
+                except ValueError:
+                    raise
+                except TypeError:
+                    pass
+            except TypeError:
+                pass
+        if isinstance(field, IntegerField):
+            value = int(value) if value else value
+        if isinstance(field, DecimalField):
+            value = Decimal(value) if value else value
+        formatted_record[field_name] = None if value == '' else value
+
+
+        
