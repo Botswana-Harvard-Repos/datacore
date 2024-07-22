@@ -8,9 +8,9 @@ from django.core.mail import EmailMessage
 from celery import shared_task
 from redcap import Project, RedcapError
 from requests.adapters import HTTPAdapter, Retry
-
+from tsepamo.models import PersonalIdentifiers, Tsepamo,SwitcherIpms,IpmsTwo,Outcomes
 from tsepamo.utils import LoadCSVData
-
+from django.core.files.base import ContentFile
 from .export_utils import GenerateDataExports
 
 logger = logging.getLogger('celery_progress')
@@ -65,6 +65,14 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
 @shared_task
 def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
 
+    def get_metadata(project):
+        try:
+            return project.export_metadata()
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            time.sleep(5)  # Sleep for a bit before retrying
+            return []
+
     def get_project_records(project, record_ids):
         try:
             return project.export_records(records=record_ids)
@@ -72,6 +80,33 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
             print(f"Request error: {e}")
             time.sleep(5)  # Sleep for a bit before retrying
             return []
+    
+    def download_file(project,record_id,field_name):
+        try:
+            content,content_map=project.export_file(record_id,field_name)
+            return content
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+            time.sleep(5)  # Sleep for a bit before retrying
+            return []
+
+    def update_model(model_class,record, file_fields):
+        record_id = record['record_id']
+        obj = model_class.objects.get(record_id=record_id)
+        
+        for field in file_fields:
+            if field in record and record[field]:
+                file_content = download_file(project, record_id, field)
+                obj.__setattr__(field, ContentFile(file_content, name=f"{record_id}_{field}.jpg"))
+        obj.save()
+    
+    def add_file_fields_to_data(record, file_fields):
+        record_id = record['record_id']
+        for field in file_fields:
+            if field in record and record[field]:
+                file_content = download_file(project, record_id, field)
+                record[field] = ContentFile(file_content, name=f"{record_id}_{field}.jpg")
+        return record
 
     try:
         # Connect to REDCap
@@ -84,6 +119,18 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
         chunk_size = 500
 
         all_data = []
+
+        # Get metadata and determine file fields
+        metadata = get_metadata(project)
+        file_fields = [field['field_name'] for field in metadata if field['field_type'] == 'file']
+
+        model_map = {
+            'tsepamo.tsepamo':Tsepamo,
+            'tsepamo.outcomes':Outcomes,
+            'tsepamo.personalidentifiers':PersonalIdentifiers,
+            'tsepamo.switcheripms':SwitcherIpms,
+            'tsepamo.ipmstwo':IpmsTwo,
+        }
 
         # Setup retry strategy
         retry_strategy = Retry(
@@ -102,7 +149,15 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
             end = start + chunk_size
             record_ids = [record.get('record_id') for record in total_records[start:end]]
             chunk_data = get_project_records(project, record_ids)
-            all_data.extend(chunk_data)
+            for record in chunk_data:
+                for model_name in model_names:
+                    model_class=model_map.get(model_name)
+                    if model_class:
+                        if model_class.objects.get(record_id=record['record_id']):
+                            update_model(model_class, record, file_fields)
+                        else:
+                            record_with_files = add_file_fields_to_data(record, file_fields)
+                            all_data.append(record_with_files)
 
         # Process and save data as needed
         tsepamo_data = LoadCSVData()
