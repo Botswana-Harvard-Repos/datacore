@@ -20,13 +20,22 @@ class GenerateDataExports:
         self.export_model_cls = ExportFile
         self.export_type = export_type
         self.export_name = export_name
-        self.model_names = model_names
+        self.model_names = model_names or []
         self.export_fields = export_fields
         self.app_label = app_label
         self.user_created = user_created
         self.export_data = []
 
-        if self.export_fields and self.model_names and self.export_type and self.export_name:
+        exclude_models = ['exportfile', 'projects', 'instrumentsmeta']
+        if not self.model_names:
+            app_models = django_apps.get_app_config(app_label).models
+            for name, _ in app_models.items():
+                if name in exclude_models:
+                    continue
+
+                self.model_names.append(name)
+
+        if self.model_names and self.export_type and self.export_name:
             self.export_data = self.prepare_export_data()
 
     @property
@@ -35,6 +44,8 @@ class GenerateDataExports:
 
     def get_model_related_fields(self, model_cls):
         model_fields = [field.name for field in model_cls._meta.fields]
+        if not self.export_fields:
+            return model_fields
         related_fields = [field for field in self.export_fields if field in model_fields]
         return related_fields
 
@@ -42,7 +53,7 @@ class GenerateDataExports:
         model_cls = django_apps.get_model(self.app_label, model_name)
         related_fields = self.get_model_related_fields(model_cls)
         if related_fields:
-            fields = ['record_id', ] + related_fields
+            fields = ['record_id', ] + related_fields if 'record_id' not in related_fields else related_fields
             return {obj.pop('record_id'): obj for obj in model_cls.objects.values(*fields)}
 
     def generate_exports(self):

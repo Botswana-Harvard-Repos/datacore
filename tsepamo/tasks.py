@@ -6,7 +6,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.mail import EmailMessage
 from celery import shared_task
-from redcap import Project, RedcapError
+from redcap import Project
 from requests.adapters import HTTPAdapter, Retry
 
 from tsepamo.utils import LoadCSVData
