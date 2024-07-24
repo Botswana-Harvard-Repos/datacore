@@ -41,7 +41,8 @@ class LoadCSVData:
         for model_name in model_names:
             print(f"Model: {model_name}")
             model_cls = django_apps.get_model(model_name)
-            model_fields = {f'{field.name}': field for field in model_cls._meta.fields}
+            model_fields = {
+                f'{field.name}': field for field in model_cls._meta.fields}
 
             for record in data:
                 formatted_record = {}
@@ -49,13 +50,13 @@ class LoadCSVData:
                     value = record.get(field_name)
                     if field_name == 'record_id':
                         continue
-                    formatted_value=self.format_fields(field,value)
+                    formatted_value = self.format_fields(field, value)
                     formatted_record[field_name] = formatted_value
                 model_objs = model_cls.objects.filter(
                     record_id=record.get('record_id'), )
                 if not model_objs:
-                #     model_objs.update(**formatted_record)
-                # else:
+                    #     model_objs.update(**formatted_record)
+                    # else:
                     create_record = formatted_record.copy()
                     create_record.update(record_id=record.get('record_id'))
                     print(f"Create Record {record.get('record_id')}")
@@ -66,14 +67,15 @@ class LoadCSVData:
             data = self.read_csv_data(csv_file)
             self.load_model_data(data, model_names)
 
-
-    def format_fields(self,field,value):
+    def format_fields(self, field, value):
         if isinstance(field, DateTimeField):
             try:
-                value = datetime.strptime(value, '%Y-%m-%d %H:%M') if value else value
+                value = datetime.strptime(
+                    value, '%Y-%m-%d %H:%M') if value else value
             except ValueError:
                 try:
-                    value = datetime.strptime(value, '%Y-%d-%m %H:%M')  if value else value
+                    value = datetime.strptime(
+                        value, '%Y-%d-%m %H:%M') if value else value
                 except ValueError:
                     raise
                 except TypeError:
@@ -82,10 +84,12 @@ class LoadCSVData:
                 pass
         elif isinstance(field, DateField):
             try:
-                value = datetime.strptime(value, '%Y-%m-%d').date() if value else value
+                value = datetime.strptime(
+                    value, '%Y-%m-%d').date() if value else value
             except ValueError:
                 try:
-                    value = datetime.strptime(value, '%Y-%d-%m').date() if value else value
+                    value = datetime.strptime(
+                        value, '%Y-%d-%m').date() if value else value
                 except ValueError:
                     raise
                 except TypeError:
@@ -100,6 +104,3 @@ class LoadCSVData:
             value = Decimal(value) if value else value
 
         return None if value == '' else value
-
-
-        

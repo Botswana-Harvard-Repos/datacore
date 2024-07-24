@@ -1,83 +1,82 @@
 from django.db import models
 from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
-class PersonalIdentifiers(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,models.Model):
 
-  hivneg_pi = models.CharField(
-  verbose_name="Is this woman HIV-positive?",
-  max_length=1,
-  choices=(('1', 'Yes'), ('0', 'No')),
-  help_text="If HIV status unknown, choose 'NO'", )
+class PersonalIdentifiers(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
 
-  pi_citizen = models.CharField(
-  verbose_name="Is this woman a Botswana citizen?  Or is she married to a Botswana citizen and therefore received HIV and ANC care within the Botswana government system?",
-  max_length=1,
-  choices=(('1', 'Yes'), ('0', 'No')),
-  help_text="Answer yes if the participant in a non-citizen but got her care through the government and is likely to be able to be found in IMPS", )
+    hivneg_pi = models.CharField(
+        verbose_name="Is this woman HIV-positive?",
+        max_length=1,
+        choices=(('1', 'Yes'), ('0', 'No')),
+        help_text="If HIV status unknown, choose 'NO'", )
 
-  omang = models.PositiveIntegerField(
-  verbose_name="OMANG",
-  help_text="if patient has no OMANG, leave BLANK", )
+    pi_citizen = models.CharField(
+        verbose_name="Is this woman a Botswana citizen?  Or is she married to a Botswana citizen and therefore received HIV and ANC care within the Botswana government system?",
+        max_length=1,
+        choices=(('1', 'Yes'), ('0', 'No')),
+        help_text="Answer yes if the participant in a non-citizen but got her care through the government and is likely to be able to be found in IMPS", )
 
-  primary_contact = models.PositiveIntegerField(
-  verbose_name="Cellphone Number (primary)",
-  blank=True, null=True,
-  help_text="if unknown leave blank", )
+    omang = models.PositiveIntegerField(
+        verbose_name="OMANG",
+        help_text="if patient has no OMANG, leave BLANK", )
 
-  second_contact = models.PositiveIntegerField(
-  verbose_name="Cellphone number ( second number )",
-  blank=True, null=True,
-  help_text="if unknown leave blank", )
+    primary_contact = models.PositiveIntegerField(
+        verbose_name="Cellphone Number (primary)",
+        blank=True, null=True,
+        help_text="if unknown leave blank", )
 
-  next_of_kin_contact = models.PositiveIntegerField(
-  verbose_name="cellphone number  for the next of kin ",
-  blank=True, null=True,
-  help_text="if unknown leave blank", )
+    second_contact = models.PositiveIntegerField(
+        verbose_name="Cellphone number ( second number )",
+        blank=True, null=True,
+        help_text="if unknown leave blank", )
 
-  first_name = models.CharField(
-  verbose_name="First Name",
-  max_length=100,
-  help_text="If unknown, write UNKNOWN", )
+    next_of_kin_contact = models.PositiveIntegerField(
+        verbose_name="cellphone number  for the next of kin ",
+        blank=True, null=True,
+        help_text="if unknown leave blank", )
 
-  middle_name = models.CharField(
-  verbose_name="Middle Name",
-  max_length=100,
-  blank=True, null=True,
-  help_text="", )
+    first_name = models.CharField(
+        verbose_name="First Name",
+        max_length=100,
+        help_text="If unknown, write UNKNOWN", )
 
-  surname = models.CharField(
-  verbose_name="Surname",
-  max_length=100,
-  help_text="If unknown, write UNKNOWN", )
+    middle_name = models.CharField(
+        verbose_name="Middle Name",
+        max_length=100,
+        blank=True, null=True,
+        help_text="", )
 
-  birthdate = models.DateField(
-  verbose_name="Birthdate",
-  help_text="MM DD YEAR", )
+    surname = models.CharField(
+        verbose_name="Surname",
+        max_length=100,
+        help_text="If unknown, write UNKNOWN", )
 
-  pi_idccclinic = models.TextField(
-  verbose_name="Name of IDCC clinic?",
-  help_text="if unknown, write unknown", )
+    birthdate = models.DateField(
+        verbose_name="Birthdate",
+        help_text="MM DD YEAR", )
 
-  la_pi = models.CharField(
-  verbose_name="Medical Record Number 1? (_A number, the first letter will depend on site.  For example at SLH this is LA number)",
-  max_length=100,
-  blank=True, null=True,
-  help_text="If unknown leave blank", )
+    pi_idccclinic = models.TextField(
+        verbose_name="Name of IDCC clinic?",
+        help_text="if unknown, write unknown", )
 
-  pm_pi = models.CharField(
-  verbose_name="Medical Record Number 2? (_M number, the first letter will depend on site.  For example at SLH this is LM number)",
-  max_length=100,
-  blank=True, null=True,
-  help_text="If unknown leave blank", )
+    la_pi = models.CharField(
+        verbose_name="Medical Record Number 1? (_A number, the first letter will depend on site.  For example at SLH this is LA number)",
+        max_length=100,
+        blank=True, null=True,
+        help_text="If unknown leave blank", )
 
-  other_info_pi = models.TextField(
-  verbose_name="Other information",
-  blank=True, null=True,
-  help_text="any clarifications or information that may be helpful ", )
+    pm_pi = models.CharField(
+        verbose_name="Medical Record Number 2? (_M number, the first letter will depend on site.  For example at SLH this is LM number)",
+        max_length=100,
+        blank=True, null=True,
+        help_text="If unknown leave blank", )
 
-  class Meta:
+    other_info_pi = models.TextField(
+        verbose_name="Other information",
+        blank=True, null=True,
+        help_text="any clarifications or information that may be helpful ", )
+
+    class Meta:
         app_label = 'tsepamo'
         verbose_name = 'Personal Identifiers'
         verbose_name_plural = 'Personal Identifiers'
-
-

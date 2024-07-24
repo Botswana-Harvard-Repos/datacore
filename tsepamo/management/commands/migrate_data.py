@@ -10,6 +10,7 @@ from tsepamo.models import (
     Tsepamo, Outcomes, PersonalIdentifiers, SwitcherIpms
 )
 
+
 class Command(BaseCommand):
     help = 'Migrate data from old models to new models'
 
@@ -19,7 +20,8 @@ class Command(BaseCommand):
         self.migrate_outcomes()
         self.migrate_personal_identifiers()
         self.migrate_switcher_ipms()
-        self.stdout.write(self.style.SUCCESS(f'Data migration completed successfully'))
+        self.stdout.write(self.style.SUCCESS(
+            f'Data migration completed successfully'))
 
     def migrate_tsepamo(self):
         field_mapping = {
@@ -31,42 +33,46 @@ class Command(BaseCommand):
             'was_this_woman_on_aspirin': 'was_this_woman_aspirin',
             # add all relevant field mappings here
         }
-        self.migrate_model([TsepamoOne,TsepamoTwo, TsepamoThree, TsepamoFour], Tsepamo,field_mapping)
-    
+        self.migrate_model(
+            [TsepamoOne, TsepamoTwo, TsepamoThree, TsepamoFour], Tsepamo, field_mapping)
 
     def migrate_outcomes(self):
-        self.migrate_model([OutcomesOne, OutcomesTwo, OutcomesThree, OutcomesFour], Outcomes)
+        self.migrate_model(
+            [OutcomesOne, OutcomesTwo, OutcomesThree, OutcomesFour], Outcomes)
 
     def migrate_personal_identifiers(self):
-        self.migrate_model([PersonalIdentifiersTwo, PersonalIdentifiersThree, PersonalIdentifiersFour], PersonalIdentifiers)
+        self.migrate_model([PersonalIdentifiersTwo, PersonalIdentifiersThree,
+                           PersonalIdentifiersFour], PersonalIdentifiers)
 
     def migrate_switcher_ipms(self):
-        self.migrate_model([SwitcherIpmsTwo, SwitcherIPMSThree, SwitcherIpmsFour], SwitcherIpms)
+        self.migrate_model(
+            [SwitcherIpmsTwo, SwitcherIPMSThree, SwitcherIpmsFour], SwitcherIpms)
 
-    def migrate_model(self, old_models, new_model,field_mapping=None):
+    def migrate_model(self, old_models, new_model, field_mapping=None):
         for old_model in old_models:
-            for obj in old_model.objects.all(): 
+            for obj in old_model.objects.all():
                 data = model_to_dict(obj)
                 # Remove the primary key to avoid conflicts
                 data.pop('id', None)
                 if field_mapping:
-                    transformed_data ={field_mapping.get(k, k): v for k, v in data.items()}
-                    if transformed_data:       
-                        self.format_all_fields(new_model,transformed_data)
+                    transformed_data = {field_mapping.get(
+                        k, k): v for k, v in data.items()}
+                    if transformed_data:
+                        self.format_all_fields(new_model, transformed_data)
                         new_model.objects.create(**transformed_data)
                 else:
                     self.format_all_fields(new_model, data)
                     new_model.objects.create(**data)
 
-
     def format_all_fields(self, model, data):
         model_fields = {field.name: field for field in model._meta.fields}
         formatted_data = {}
-        
+
         for field_name, field in model_fields.items():
             value = data.get(field_name)
             if field_name == 'record_id':
                 continue
-            formatted_data[field_name] = self.tsepamo_data.format_fields(field, value)
+            formatted_data[field_name] = self.tsepamo_data.format_fields(
+                field, value)
 
         data.update(formatted_data)
