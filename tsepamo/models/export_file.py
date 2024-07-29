@@ -1,9 +1,11 @@
-import os
+import os, pytz
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.db import models
 from django.utils.safestring import mark_safe
 from datetime import datetime
+
+tz = pytz.timezone('Africa/Gaborone')
 
 
 class ExportFile(models.Model):
@@ -40,7 +42,9 @@ class ExportFile(models.Model):
 
     def save(self, *args, **kwargs):
         if self.datetime_started and self.datetime_completed:
-            difference = self.datetime_completed - self.datetime_started
+            datetime_completed = self.datetime_completed.astimezone(tz)
+            datetime_started = self.datetime_started.astimezone(tz)
+            difference = datetime_completed - datetime_started
             self.download_time = round(difference.total_seconds() / 60, 2)
         super().save(*args, **kwargs)
 
@@ -64,7 +68,8 @@ class ExportFile(models.Model):
             Simple kb/mb/gb size snippet for templates:
             {{ export.file.size|sizify }}
         """
-        value = self.file.size
+
+        value = self.file.size if self.file else 0
         if value < 512000:
             value = value / 1024.0
             ext = 'Kb'
