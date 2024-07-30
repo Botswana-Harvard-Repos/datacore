@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 from bson.decimal128 import Decimal128
 from celery import shared_task, group, chain
+from celery.exceptions import SoftTimeLimitExceeded
 from django.core.mail import EmailMessage
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -66,75 +67,86 @@ class GenerateDataExports:
 
 
 # Main task to orchestrate the data preparation and export
-@shared_task
-def prepare_export_data_task(app_label, model_names, export_fields, export_type,
-                             export_name, user_emails, export_id):
-    fetch_data_tasks = []
-    chunk_size = 1000
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def prepare_export_data_task(self, app_label, model_names, export_fields,
+                             export_type, export_name, user_emails, export_id):
+
+    try:
+        chunk_size = 1000
+
+        unique_record_ids = get_unique_record_ids(app_label, model_names)
+
+        unique_record_ids = list(unique_record_ids)
+        chunks = [unique_record_ids[i:i + chunk_size] for i in range(0, len(unique_record_ids), chunk_size)]
+
+        process_data_tasks = []
+        for chunk in chunks:
+            process_data_tasks.append(
+                process_chunk_data.s(app_label, model_names, export_fields, chunk))
+
+        process_data_group = group(process_data_tasks)
+
+        result = chain(
+            process_data_group | write_final_output_task.s(export_type, export_name, user_emails, export_id))
+        result.apply_async()
+    except SoftTimeLimitExceeded:
+        self.update_state(state='FAILURE')
+        new_soft_time_limit = self.request.soft_time_limit + 3600
+        new_time_limit = self.request.time_limit + 3600
+        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
+
+
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def process_chunk_data(self, app_label, model_names, export_fields, chunk):
+    data = {}
+    try:
+        for model_name in model_names:
+            model_cls = django_apps.get_model(app_label, model_name)
+            records = fetch_model_data(model_cls, export_fields, chunk)
+            for record in records:
+                record_id = record.pop('record_id')
+                if record_id not in data:
+                    data[record_id] = record
+                else:
+                    data[record_id].update(record)
+        return data
+    except SoftTimeLimitExceeded:
+        self.update_state(state='FAILURE')
+        new_soft_time_limit = self.request.soft_time_limit + 3600
+        new_time_limit = self.request.time_limit + 3600
+        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
+
+
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def write_final_output_task(self, chunk_results, export_type, export_name, user_emails, export_id):
+    try:
+        merged_data = []
+        for chunk_data in chunk_results:
+            merged_data.append(chunk_data.values())
+
+        if export_type.lower() == 'csv':
+            write_to_csv(merged_data, export_name, user_emails, export_id)
+        if export_type.lower() == 'excel':
+            write_to_excel_task(merged_data, export_name, user_emails, export_id)
+    except SoftTimeLimitExceeded:
+        self.update_state(state='FAILURE')
+        new_soft_time_limit = self.request.soft_time_limit + 3600
+        new_time_limit = self.request.time_limit + 3600
+        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
+
+
+def get_unique_record_ids(app_label, model_names):
+    unique_record_ids = set()
     for model_name in model_names:
         model_cls = django_apps.get_model(app_label, model_name)
-        total_records = model_cls.objects.count()
-        for i in range(0, total_records, chunk_size):
-            fetch_data_tasks.append(
-                fetch_model_data_task.s(app_label, model_name, export_fields, i, i + chunk_size))
-    fetch_data_group = group(fetch_data_tasks)
-
-    return chain(
-        fetch_data_group | handle_fetch_data_result.s(
-            export_type, export_name, user_emails, export_id)).apply_async()
+        unique_record_ids.update(
+            model_cls.objects.values_list('record_id', flat=True))
+    return unique_record_ids
 
 
-@shared_task
-def handle_fetch_data_result(fetch_data_results, export_type, export_name,
-                             user_emails, export_id):
-    # Merge data in chunks
-    chunk_size = 1000  # Adjust chunk size as needed
-    all_record_ids = get_unique_record_ids(fetch_data_results)
-    chunks = [list(all_record_ids)[i:i + chunk_size] for i in range(0, len(all_record_ids), chunk_size)]
-
-    merge_data_tasks = group(merge_data_chunk_task.s(chunk, fetch_data_results) for chunk in chunks)
-
-    if export_type.lower() == 'csv':
-        return chain(
-            merge_data_tasks | write_to_csv_task.s(export_name, user_emails, export_id)).apply_async()
-    if export_type.lower() == 'excel':
-        return chain(
-            merge_data_tasks | write_to_excel_task.s(export_name, user_emails, export_id)).apply_async()
-
-
-@shared_task
-def fetch_model_data_task(app_label, model_name, export_fields, start, end):
-    """ Returns data related to a specific model, and fields provided.
-        @param app_label: name of app model is registered
-        @param model_name: name of model
-        @return: data dict
+def write_to_csv(records: list, export_name, user_emails, export_id):
+    """ Write data to csv format and returns response
     """
-    model_cls = django_apps.get_model(app_label, model_name)
-    model_fields = get_model_related_fields(model_cls, export_fields)
-    data = model_cls.objects.all()[start:end].values(*model_fields)
-    return {obj.pop('record_id'): transform_model_data(obj) for obj in data}
-
-
-@shared_task
-def merge_data_chunk_task(chunk, all_model_data):
-    """ Returns merged data chunks from different models into a flat table.
-        @param chunk: a subset of the data to merge
-        @param all_model_data: complete dataset
-        @return: data merged by `record_id`
-    """
-    merged_data = []
-    for record_id in chunk:
-        record = {'record_id': record_id}
-        for model_data in all_model_data:
-            model_dict = model_data.get(record_id, {})
-            record.update(model_dict)
-        merged_data.append(record)
-    return merged_data
-
-
-@shared_task
-def write_to_csv_task(records, export_name, user_emails, export_id):
-    """ Write data to csv format and returns response """
     df = pd.DataFrame(records)
 
     response = HttpResponse(content_type='text/csv')
@@ -149,8 +161,7 @@ def write_to_csv_task(records, export_name, user_emails, export_id):
     return response
 
 
-@shared_task
-def write_to_excel_task(records, export_name, user_emails, export_id):
+def write_to_excel_task(records: list, export_name, user_emails, export_id):
     """ Write data to excel format and returns response
     """
     excel_buffer = BytesIO()
@@ -182,6 +193,12 @@ def write_to_excel_task(records, export_name, user_emails, export_id):
     return response
 
 
+def fetch_model_data(model_cls, export_fields, record_ids):
+    model_fields = get_model_related_fields(model_cls, export_fields)
+    objs = model_cls.objects.filter(record_id__in=record_ids).values(*model_fields)
+    return [transform_model_data(obj) for obj in objs]
+
+
 @shared_task
 def send_email_task(export_name, user_emails, export_id):
     email = EmailMessage('DataCore export ready',
@@ -205,18 +222,10 @@ def send_email_task(export_name, user_emails, export_id):
 
 
 def transform_model_data(record):
-        for key, value in record.items():
-            if isinstance(value, Decimal128):
-                record[key] = str(value)
-        return record
-
-
-def get_unique_record_ids(all_model_data):
-    """ Get a set of all unique record IDs across all models """
-    all_record_ids = set()
-    for data in all_model_data:
-        all_record_ids.update(data.keys())
-    return all_record_ids
+    for key, value in record.items():
+        if isinstance(value, Decimal128):
+            record[key] = str(value)
+    return record
 
 
 def get_model_related_fields(model_cls, export_fields):
@@ -251,7 +260,7 @@ def handle_export_response(response, export_name, export_type='csv'):
 
 def get_export_filename(export_name):
     current_datetime = datetime.datetime.now()
-    date_str = current_datetime.strftime('%Y-%m-%d_%H:%M')
+    date_str = current_datetime.strftime('%Y-%m-%d_%H_%M')
     filename = "%s-%s" % (export_name, date_str)
     return filename
 
