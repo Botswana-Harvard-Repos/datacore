@@ -458,5 +458,5 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
 
     class Meta:
         app_label = 'tsepamo'
-        verbose_name = 'IPMS 2'
-        verbose_name_plural = 'IPMS 2'
+        verbose_name = 'IPMS'
+        verbose_name_plural = 'IPMS'
