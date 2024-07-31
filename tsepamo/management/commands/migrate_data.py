@@ -63,14 +63,12 @@ class Command(BaseCommand):
                         self.format_all_fields(new_model, transformed_data)
                         try:
                             self.get_or_create_model_obj(new_model, transformed_data)
-                            print('Migrated Record', transformed_data.get('record_id'))
                         except Exception:
                             print(f"Error for, {transformed_data.get('record_id')}")
                 else:
                     self.format_all_fields(new_model, data)
                     try:
                         self.get_or_create_model_obj(new_model, data)
-                        print('Migrated Record', data.get('record_id'))
                     except Exception:
                         print(f"Error for, {data.get('record_id')}")
 
@@ -78,6 +76,7 @@ class Command(BaseCommand):
         try:
             model_cls.objects.get(record_id=data.get('record_id', None))
         except model_cls.DoesNotExist:
+            print('Migrated Record', data.get('record_id'))
             model_cls.objects.create(**data)
 
     def format_all_fields(self, model, data):
