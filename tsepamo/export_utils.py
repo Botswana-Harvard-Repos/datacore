@@ -4,6 +4,7 @@ import pandas as pd
 from bson.decimal128 import Decimal128
 from celery import shared_task, group, chain
 from celery.exceptions import SoftTimeLimitExceeded
+from collections import defaultdict
 from django.core.mail import EmailMessage
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -70,20 +71,24 @@ class GenerateDataExports:
 @shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
 def prepare_export_data_task(self, app_label, model_names, export_fields,
                              export_type, export_name, user_emails, export_id):
-    data = {}
+    data = defaultdict(dict)
     try:
+        chunk_size = 10000
         for model_name in model_names:
             model_cls = django_apps.get_model(app_label, model_name)
-            records = fetch_model_data(model_cls, export_fields)
-            for record in records:
-                record_id = record.pop('record_id')
-                if record_id not in data:
-                    data[record_id] = record
-                else:
+            offset = 0
+            while True:
+                records = fetch_model_data(model_cls, export_fields, offset, chunk_size)
+                if not records:
+                    break
+                for record in records:
+                    record_id = record.pop('record_id')
                     data[record_id].update(record)
+                offset += chunk_size
 
         merged_data = []
         for record_id, record_data in data.items():
+            print(record_id)
             merged_data.append(
                 {'record_id': record_id, **record_data})
 
@@ -156,9 +161,9 @@ def write_to_excel_task(records: list, export_name, user_emails, export_id):
     return response
 
 
-def fetch_model_data(model_cls, export_fields):
+def fetch_model_data(model_cls, export_fields, offset=0, limit=10000):
     model_fields = get_model_related_fields(model_cls, export_fields)
-    return model_cls.objects.values(*model_fields)
+    return list(model_cls.objects.values(*model_fields)[offset:offset + limit])
 
 
 @shared_task
