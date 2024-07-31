@@ -70,59 +70,22 @@ class GenerateDataExports:
 @shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
 def prepare_export_data_task(self, app_label, model_names, export_fields,
                              export_type, export_name, user_emails, export_id):
-
-    try:
-        chunk_size = 1000
-
-        unique_record_ids = get_unique_record_ids(app_label, model_names)
-
-        unique_record_ids = list(unique_record_ids)
-        chunks = [unique_record_ids[i:i + chunk_size] for i in range(0, len(unique_record_ids), chunk_size)]
-
-        process_data_tasks = []
-        for chunk in chunks:
-            process_data_tasks.append(
-                process_chunk_data.s(app_label, model_names, export_fields, chunk))
-
-        process_data_group = group(process_data_tasks)
-
-        result = chain(
-            process_data_group | write_final_output_task.s(export_type, export_name, user_emails, export_id))
-        result.apply_async()
-    except SoftTimeLimitExceeded:
-        self.update_state(state='FAILURE')
-        new_soft_time_limit = self.request.soft_time_limit + 3600
-        new_time_limit = self.request.time_limit + 3600
-        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
-
-
-@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
-def process_chunk_data(self, app_label, model_names, export_fields, chunk):
     data = {}
     try:
         for model_name in model_names:
             model_cls = django_apps.get_model(app_label, model_name)
-            records = fetch_model_data(model_cls, export_fields, chunk)
+            records = fetch_model_data(model_cls, export_fields)
             for record in records:
                 record_id = record.pop('record_id')
                 if record_id not in data:
                     data[record_id] = record
                 else:
                     data[record_id].update(record)
-        return data
-    except SoftTimeLimitExceeded:
-        self.update_state(state='FAILURE')
-        new_soft_time_limit = self.request.soft_time_limit + 3600
-        new_time_limit = self.request.time_limit + 3600
-        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
 
-
-@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
-def write_final_output_task(self, chunk_results, export_type, export_name, user_emails, export_id):
-    try:
         merged_data = []
-        for chunk_data in chunk_results:
-            merged_data.append(chunk_data.values())
+        for record_id, record_data in data.items():
+            merged_data.append(
+                {'record_id': record_id, **record_data})
 
         if export_type.lower() == 'csv':
             write_to_csv(merged_data, export_name, user_emails, export_id)
@@ -193,10 +156,9 @@ def write_to_excel_task(records: list, export_name, user_emails, export_id):
     return response
 
 
-def fetch_model_data(model_cls, export_fields, record_ids):
+def fetch_model_data(model_cls, export_fields):
     model_fields = get_model_related_fields(model_cls, export_fields)
-    objs = model_cls.objects.filter(record_id__in=record_ids).values(*model_fields)
-    return [transform_model_data(obj) for obj in objs]
+    return model_cls.objects.values(*model_fields)
 
 
 @shared_task
@@ -219,13 +181,6 @@ def send_email_task(export_name, user_emails, export_id):
         export_file.datetime_completed = datetime.datetime.now()
         export_file.download_complete = True
         export_file.save()
-
-
-def transform_model_data(record):
-    for key, value in record.items():
-        if isinstance(value, Decimal128):
-            record[key] = str(value)
-    return record
 
 
 def get_model_related_fields(model_cls, export_fields):
