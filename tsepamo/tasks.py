@@ -84,7 +84,7 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
 
     def download_file(project, record_id, field_name):
         try:
-            content, content_map = project.export_file(record_id, field_name)
+            content, _ = project.export_file(record_id, field_name)
             return content
         except requests.exceptions.RequestException as e:
             print(f"Request error: {e}")
