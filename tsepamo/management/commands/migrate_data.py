@@ -49,6 +49,7 @@ class Command(BaseCommand):
             [SwitcherIpmsTwo, SwitcherIPMSThree, SwitcherIpmsFour], SwitcherIpms)
 
     def migrate_model(self, old_models, new_model, field_mapping=None):
+        print(new_model,old_models)
         for old_model in old_models:
             for obj in old_model.objects.all():
                 data = model_to_dict(obj)
