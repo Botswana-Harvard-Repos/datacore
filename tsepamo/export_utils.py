@@ -83,6 +83,7 @@ def prepare_export_data_task(self, app_label, model_names, export_fields,
                     break
                 for record in records:
                     record_id = record.pop('record_id')
+                    print(record_id)
                     data[record_id].update(record)
                 offset += chunk_size
 
