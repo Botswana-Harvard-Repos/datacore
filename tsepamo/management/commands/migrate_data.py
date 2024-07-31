@@ -55,15 +55,20 @@ class Command(BaseCommand):
                 data = model_to_dict(obj)
                 # Remove the primary key to avoid conflicts
                 data.pop('id', None)
-                if field_mapping:
-                    transformed_data = {field_mapping.get(
-                        k, k): v for k, v in data.items()}
-                    if transformed_data:
-                        self.format_all_fields(new_model, transformed_data)
-                        new_model.objects.create(**transformed_data)
-                else:
-                    self.format_all_fields(new_model, data)
-                    new_model.objects.create(**data)
+                model_objs = new_model.objects.filter(
+                    record_id=data.get('record_id'),)
+                if not model_objs:
+                    if field_mapping:
+                        transformed_data = {field_mapping.get(
+                            k, k): v for k, v in data.items()}
+                        if transformed_data:
+                            self.format_all_fields(new_model, transformed_data)
+                            new_model.objects.create(**transformed_data)
+                            print("Migrated Record",transformed_data.get('record_id'))
+                    else:
+                        self.format_all_fields(new_model, data)
+                        new_model.objects.create(**data)
+                        print("Migrated Record",data.get('record_id'))
 
     def format_all_fields(self, model, data):
         model_fields = {field.name: field for field in model._meta.fields}

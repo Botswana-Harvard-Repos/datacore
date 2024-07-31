@@ -44,9 +44,8 @@ class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
         choices=(('1', 'Yes'), ('0', 'No')),
         help_text="", )
 
-    part_cl_bid = models.DecimalField(
+    part_cl_bid = models.PositiveIntegerField(
         verbose_name="What is the cervical length study number?",
-        decimal_places=2, max_digits=8,
         help_text="Enter the 3 numbers AFTER CL-", )
 
     placental = models.CharField(
@@ -78,9 +77,8 @@ class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
         blank=True, null=True,
         help_text="", )
 
-    placenta_id = models.DecimalField(
+    placenta_id = models.PositiveIntegerField(
         verbose_name="Placental ID: (this is the Tsepamo BID WITHOUT the first two numbers--site code (10))",
-        decimal_places=2, max_digits=8,
         help_text="", )
 
     placenta_hiv = models.CharField(
@@ -244,9 +242,8 @@ class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
         choices=(('1', 'Yes'), ('0', 'No')),
         help_text="", )
 
-    placental_bid = models.DecimalField(
+    placental_bid = models.PositiveIntegerField(
         verbose_name="1.1 Placental ID",
-        decimal_places=2, max_digits=8,
         help_text="", )
 
     placenta_mature = models.CharField(
@@ -1416,9 +1413,8 @@ class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
         choices=(('1', 'YES'), ('0', 'NO')),
         help_text="If the viral load is higher than 400, choose NO", )
 
-    high_vl = models.DecimalField(
+    high_vl = models.PositiveIntegerField(
         verbose_name="What is the first viral load during pregnancy?",
-        decimal_places=2, max_digits=8,
         help_text="", )
 
     vl1_source = models.CharField(
@@ -1450,9 +1446,8 @@ class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
         choices=(('1', 'YES'), ('0', 'NO')),
         help_text="", )
 
-    high_vl2 = models.DecimalField(
+    high_vl2 = models.PositiveIntegerField(
         verbose_name="What is the second viral load during pregnancy?",
-        decimal_places=2, max_digits=8,
         help_text="", )
 
     vl2_source = models.CharField(
