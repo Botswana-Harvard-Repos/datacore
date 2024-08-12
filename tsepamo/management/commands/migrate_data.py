@@ -34,7 +34,7 @@ class Command(BaseCommand):
             # add all relevant field mappings here
         }
         self.migrate_model(
-            [TsepamoOne, TsepamoTwo, TsepamoThree], Tsepamo, field_mapping)
+            [TsepamoOne, TsepamoTwo, TsepamoThree, TsepamoFour], Tsepamo, field_mapping)
 """
     def migrate_outcomes(self):
         field_mapping ={
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             'ipms_followup':'imps_followup'
         }
         self.migrate_model(
-            [OutcomesOne, OutcomesTwo, OutcomesThree,OutcomesFour], Outcomes,field_mapping)
+            [OutcomesOne, OutcomesTwo, OutcomesThree], Outcomes,field_mapping)
         
 
     """def migrate_personal_identifiers(self):
