@@ -161,8 +161,10 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
                         record_with_fields = update_or_create_model(
                             model_class, record, file_fields)
                         if record_with_fields:
+                            print("Image pulled for",record.get('record_id'))
                             all_data.append(record_with_fields)
                         else:
+                            print("Image pulled for",record.get('record_id'))
                             all_data.append(record)
 
         # Process and save data as needed
