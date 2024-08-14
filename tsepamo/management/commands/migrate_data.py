@@ -16,14 +16,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.tsepamo_data = LoadCSVData()
-        self.migrate_tsepamo()
+        #self.migrate_tsepamo()
         self.migrate_outcomes()
-        self.migrate_personal_identifiers()
-        self.migrate_switcher_ipms()
+        #self.migrate_personal_identifiers()
+        #self.migrate_switcher_ipms()
         self.stdout.write(self.style.SUCCESS(
             f'Data migration completed successfully'))
 
-    def migrate_tsepamo(self):
+    """def migrate_tsepamo(self):
         field_mapping = {
             'placental_organism': 'placenta_organism',
             'placental_pcdecid': 'placenta_pcdecid',
@@ -34,19 +34,24 @@ class Command(BaseCommand):
             # add all relevant field mappings here
         }
         self.migrate_model(
-            [TsepamoOne, TsepamoTwo, TsepamoThree, TsepamoFour], Tsepamo, field_mapping)
-
+            [TsepamoOne, TsepamoTwo, TsepamoThree], Tsepamo, field_mapping)
+"""
     def migrate_outcomes(self):
+        field_mapping ={
+            'surgery_describe':'surgery_details',
+            'ipms_followup':'imps_followup'
+        }
         self.migrate_model(
-            [OutcomesOne, OutcomesTwo, OutcomesThree, OutcomesFour], Outcomes)
+            [OutcomesOne, OutcomesTwo, OutcomesThree,OutcomesFour], Outcomes,field_mapping)
+        
 
-    def migrate_personal_identifiers(self):
+    """def migrate_personal_identifiers(self):
         self.migrate_model([PersonalIdentifiersTwo, PersonalIdentifiersThree,
                            PersonalIdentifiersFour], PersonalIdentifiers)
 
     def migrate_switcher_ipms(self):
         self.migrate_model(
-            [SwitcherIpmsTwo, SwitcherIPMSThree, SwitcherIpmsFour], SwitcherIpms)
+            [SwitcherIpmsTwo, SwitcherIPMSThree, SwitcherIpmsFour], SwitcherIpms)"""
 
     def migrate_model(self, old_models, new_model, field_mapping=None):
         print(new_model, old_models)
