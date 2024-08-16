@@ -93,7 +93,7 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
 
     def update_or_create_model(model_class, record, file_fields):
         record_id = record['record_id']
-
+        print("Pulling_images for",record_id)
         for field in file_fields:
             if field in record and record[field]:
                 file_content = download_file(project, record_id, field)
@@ -158,13 +158,14 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
                 for model_name in model_names:
                     model_class = model_map.get(model_name)
                     if model_class:
+                        print("Current_model_images",model_class)
                         record_with_fields = update_or_create_model(
                             model_class, record, file_fields)
-                        if record_with_fields:
-                            print("Image pulled for",record.get('record_id'))
+                        if record_with_fields is not None:
+                            print("Images pulled for",record.get('record_id'))
                             all_data.append(record_with_fields)
                         else:
-                            print("Image pulled for",record.get('record_id'))
+                            print("Image added for",record.get('record_id'))
                             all_data.append(record)
 
         # Process and save data as needed
