@@ -1,8 +1,9 @@
 from django.db import models
-from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin, DecimalFieldMixin
 
 
-class Outcomes(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+class Outcomes(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+                DecimalFieldMixin, models.Model):
 
     mother_name = models.CharField(
         verbose_name="Mother's Name ",

@@ -1,10 +1,9 @@
 from django.db import models
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin, DecimalFieldMixin
 
-from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
 
-
-class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
-              models.Model):
+class Tsepamo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, DecimalFieldMixin,
+              models.Model,):
 
     site = models.CharField(
         verbose_name="Delivery Site",
