@@ -1,10 +1,9 @@
 from django.db import models
-from decimal import Decimal
-from bson.decimal128 import Decimal128
-from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin, DecimalFieldMixin
 
 
-class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+              DecimalFieldMixin, models.Model):
 
     ipms_found = models.CharField(
         verbose_name="Patient's record found in IPMS?",
@@ -159,7 +158,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl1 = models.CharField(
         verbose_name="Was Viral Load 1 (most recent):",
         max_length=1,
-        choices=(('0', '<400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '<400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh1 = models.PositiveIntegerField(
@@ -173,7 +173,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl2 = models.CharField(
         verbose_name="Was Viral Load 2:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh2 = models.PositiveIntegerField(
@@ -187,7 +188,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl3 = models.CharField(
         verbose_name="Was Viral Load 3:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh3 = models.PositiveIntegerField(
@@ -201,7 +203,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl4 = models.CharField(
         verbose_name="Was Viral Load 4:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh4 = models.PositiveIntegerField(
@@ -215,7 +218,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl5 = models.CharField(
         verbose_name="Was Viral Load 5:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh5 = models.PositiveIntegerField(
@@ -229,7 +233,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl6 = models.CharField(
         verbose_name="Was Viral Load 6:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh6 = models.PositiveIntegerField(
@@ -243,7 +248,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl7 = models.CharField(
         verbose_name="Was Viral Load 7:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh7 = models.PositiveIntegerField(
@@ -257,7 +263,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl8 = models.CharField(
         verbose_name="Was Viral Load 8:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh8 = models.PositiveIntegerField(
@@ -271,7 +278,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl9 = models.CharField(
         verbose_name="Was Viral Load 9:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh9 = models.PositiveIntegerField(
@@ -285,7 +293,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl10 = models.CharField(
         verbose_name="Was Viral Load 10:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh10 = models.PositiveIntegerField(
@@ -299,7 +308,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl11 = models.CharField(
         verbose_name="Was Viral Load 11:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh11 = models.PositiveIntegerField(
@@ -313,7 +323,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl12 = models.CharField(
         verbose_name="Was Viral Load 12:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh12 = models.PositiveIntegerField(
@@ -327,7 +338,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl13 = models.CharField(
         verbose_name="Was Viral Load 13:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh13 = models.PositiveIntegerField(
@@ -341,7 +353,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl14 = models.CharField(
         verbose_name="Was Viral Load 14:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh14 = models.PositiveIntegerField(
@@ -355,7 +368,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_vl15 = models.CharField(
         verbose_name="Was Viral Load 15:",
         max_length=1,
-        choices=(('0', '< 400 (undetectable)'), ('1', '>400 (not undetectable)')),
+        choices=(('0', '< 400 (undetectable)'),
+                 ('1', '>400 (not undetectable)')),
         help_text="", )
 
     ipms_vlhigh15 = models.PositiveIntegerField(
@@ -389,7 +403,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_syphresult1 = models.CharField(
         verbose_name="Result of most recent syphilis test (RPR) in pregnancy?",
         max_length=1,
-        choices=(('1', 'Reactive (positive)'), ('0', 'Non-reactive (negative)')),
+        choices=(('1', 'Reactive (positive)'),
+                 ('0', 'Non-reactive (negative)')),
         help_text="", )
 
     ipms_syphdate2 = models.DateField(
@@ -399,7 +414,8 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
     ipms_syphresult2 = models.CharField(
         verbose_name="Result of first syphilis test (RPR) in pregnancy?",
         max_length=1,
-        choices=(('1', 'Reactive (positive)'), ('0', 'Non-reactive (negative)')),
+        choices=(('1', 'Reactive (positive)'),
+                 ('0', 'Non-reactive (negative)')),
         help_text="", )
 
     ipms_cbcnum = models.CharField(
@@ -456,27 +472,6 @@ class IpmsTwo(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Mod
         verbose_name="Any addition information from IPMS",
         blank=True, null=True,
         help_text="", )
-    
-    def clean_decimal_fields(self):
-        for field_name, value in self.__dict__.items():
-            if isinstance(value, Decimal128):
-                # Convert Decimal128 fields to Decimal
-                setattr(self, field_name, self.convert_decimal128_to_decimal(value))
-            elif isinstance(value, Decimal):
-                # Ensure all decimals are of the correct type
-                setattr(self, field_name, Decimal(value))
-
-    def convert_decimal128_to_decimal(value):
-        if isinstance(value, Decimal128):
-            # Convert Decimal128 to Decimal
-            return value.to_decimal()
-        return value
-    
-    def save(self,*args, **kwargs):
-        # Before saving, clean the decimal fields
-        self.clean_decimal_fields()
-        # Assuming you have some method to save the document to MongoDB
-        super().save(*args, **kwargs)
 
     class Meta:
         app_label = 'tsepamo'

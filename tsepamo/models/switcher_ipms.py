@@ -1,9 +1,9 @@
 from django.db import models
-from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin
-from decimal import Decimal
-from bson.decimal128 import Decimal128
+from .model_mixins import CompleteFieldMixin, UuidModelMixin, RecordIDModelMixin, DecimalFieldMixin
 
-class SwitcherIpms(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, models.Model):
+
+class SwitcherIpms(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin,
+                   DecimalFieldMixin, models.Model):
 
     ipms_foundv1 = models.CharField(
         verbose_name="Patient's record found in IPMS?",
@@ -120,27 +120,6 @@ class SwitcherIpms(UuidModelMixin, RecordIDModelMixin, CompleteFieldMixin, model
         max_length=100,
         blank=True, null=True,
         help_text="", )
-    
-    def clean_decimal_fields(self):
-        for field_name, value in self.__dict__.items():
-            if isinstance(value, Decimal128):
-                # Convert Decimal128 fields to Decimal
-                setattr(self, field_name, self.convert_decimal128_to_decimal(value))
-            elif isinstance(value, Decimal):
-                # Ensure all decimals are of the correct type
-                setattr(self, field_name, Decimal(value))
-
-    def convert_decimal128_to_decimal(value):
-        if isinstance(value, Decimal128):
-            # Convert Decimal128 to Decimal
-            return value.to_decimal()
-        return value
-    
-    def save(self,*args, **kwargs):
-        # Before saving, clean the decimal fields
-        self.clean_decimal_fields()
-        # Assuming you have some method to save the document to MongoDB
-        super().save(*args, **kwargs)
 
     class Meta:
         app_label = 'tsepamo'
