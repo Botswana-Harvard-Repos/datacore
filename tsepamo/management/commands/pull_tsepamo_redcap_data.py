@@ -4,7 +4,7 @@ from tsepamo.tasks import export_project_data_and_send_email
 
 project_models_map = {'tsepamo_1': ['tsepamo.tsepamo', 'tsepamo.outcomes'],
                       'tsepamo_2': ['tsepamo.tsepamo', 'tsepamo.outcomes',
-                                    'tsepamo.switcheripms', 'tsepamo.personalidentifiers', 'tsepamo.ipms'],
+                                    'tsepamo.switcheripms', 'tsepamo.personalidentifiers', 'tsepamo.ipmstwo'],
                       'tsepamo_3': ['tsepamo.tsepamo', 'tsepamo.outcomes',
                                     'tsepamo.switcheripms', 'tsepamo.personalidentifiers'],
                       'tsepamo_4': ['tsepamo.tsepamo', 'tsepamo.outcomes',
