@@ -8,14 +8,16 @@ from django.core.mail import EmailMessage
 from celery import shared_task
 from redcap import Project
 from requests.adapters import HTTPAdapter, Retry
-from tsepamo.models import PersonalIdentifiers, Tsepamo, SwitcherIpms, IpmsTwo, Outcomes
 from tsepamo.utils import LoadCSVData
-from django.core.files.base import ContentFile
 from .export_utils import GenerateDataExports
-from django.core.exceptions import ObjectDoesNotExist
+from pymongo import MongoClient
+import os
 
 logger = logging.getLogger('celery_progress')
 REDCAP_API_KEYS = ast.literal_eval(settings.REDCAP_API_KEYS)
+
+client = MongoClient(settings.MONGO_URI)
+db = client[settings.MONGO_DB_NAME]
 
 
 @shared_task()
@@ -64,7 +66,7 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
 
 
 @shared_task
-def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
+def export_project_data_and_send_email(project_name, emails=[], collection_name=None):
 
     def get_metadata(project):
         try:
@@ -91,24 +93,27 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
             time.sleep(5)  # Sleep for a bit before retrying
             return []
 
-    def update_or_create_model(model_class, record, file_fields):
+    def update_or_create_model(collection_name, record, file_fields):
         record_id = record['record_id']
-
+        collection =db[collection_name]
         for field in file_fields:
             if field in record and record[field]:
                 file_content = download_file(project, record_id, field)
-                try:
-                    obj = model_class.objects.get(record_id=record_id)
-                except ObjectDoesNotExist:
-                    record[field] = ContentFile(
-                        file_content, name=f"{record_id}_{field}.jpg")
-                    return record
-                else:
-                    obj.__setattr__(field, ContentFile(
-                        file_content, name=f"{record_id}_{field}.jpg"))
-                    obj.save()
-                    return None
+                file_name = f"{record_id}_{field}.jpg"
+                file_path = os.path.join(settings.MEDIA_ROOT, file_name)
 
+                with open(file_path, 'wb') as f:
+                    f.write(file_content)
+                record[field] = file_path
+
+        print(f"Create Record {record_id}")
+        collection.update_one(
+            {'record_id': record_id},  # Search for a record with this ID
+            {'$set': record},  # Update the record with new data
+            upsert=True  # Create the record if it doesn't exist
+            )
+
+                
     try:
         # Connect to REDCap
         project = Project(
@@ -119,20 +124,10 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
         total_count = len(total_records)
         chunk_size = 500
 
-        all_data = []
-
         # Get metadata and determine file fields
         metadata = get_metadata(project)
         file_fields = [field['field_name']
                        for field in metadata if field['field_type'] == 'file']
-
-        model_map = {
-            'tsepamo.tsepamo': Tsepamo,
-            'tsepamo.outcomes': Outcomes,
-            'tsepamo.personalidentifiers': PersonalIdentifiers,
-            'tsepamo.switcheripms': SwitcherIpms,
-            'tsepamo.ipmstwo': IpmsTwo,
-        }
 
         # Setup retry strategy
         retry_strategy = Retry(
@@ -155,22 +150,10 @@ def export_project_data_and_send_email(project_name, emails=[], model_names=[]):
                           for record in total_records[start:end]]
             chunk_data = get_project_records(project, record_ids)
             for record in chunk_data:
-                for model_name in model_names:
-                    model_class = model_map.get(model_name)
-                    if model_class:
-                        record_with_fields = update_or_create_model(
-                            model_class, record, file_fields)
-                        if record_with_fields:
-                            print("Image pulled for",record.get('record_id'))
-                            all_data.append(record_with_fields)
-                        else:
-                            print("Image pulled for",record.get('record_id'))
-                            all_data.append(record)
-
-        # Process and save data as needed
-        tsepamo_data = LoadCSVData()
-        tsepamo_data.load_model_data(all_data, model_names)
-
+                    if collection_name:
+                        update_or_create_model(
+                            collection_name, record, file_fields)
+                        
         # Send success email notification
         success_email = EmailMessage(
             'Project Data Export Complete',

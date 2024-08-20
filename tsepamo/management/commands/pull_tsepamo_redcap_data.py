@@ -2,13 +2,10 @@ from django.core.management.base import BaseCommand, CommandError
 
 from tsepamo.tasks import export_project_data_and_send_email
 
-project_models_map = {'tsepamo_1': ['tsepamo.tsepamoone', 'tsepamo.outcomesone'],
-                      'tsepamo_2': ['tsepamo.tsepamotwo', 'tsepamo.outcomestwo',
-                                    'tsepamo.switcheripmstwo', 'tsepamo.personalidentifierstwo', 'tsepamo.ipmstwo'],
-                      'tsepamo_3': ['tsepamo.tsepamothree', 'tsepamo.outcomesthree',
-                                    'tsepamo.switcheripmsthree', 'tsepamo.personalidentifiersthree'],
-                      'tsepamo_4': ['tsepamo.tsepamofour', 'tsepamo.outcomesfour',
-                                    'tsepamo.switcheripmsfour', 'tsepamo.personalidentifiersfour']}
+project_models_map = {'tsepamo_1': 'tsepamo',
+                      'tsepamo_2': 'tsepamo',
+                      'tsepamo_3': 'tsepamo',
+                      'tsepamo_4': 'tsepamo'}
 
 
 class Command(BaseCommand):
