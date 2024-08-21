@@ -193,6 +193,11 @@ PASSWORD_RESET_CONFIRM_REDIRECT_BASE_URL = 'password_reset_confirm'
 
 MERCURY_URL = 'http://127.0.0.1:8000/app/tsepamo'
 
+#Mongo db configurations
+
+MONGO_URI = config['mongo_conf'].get('mongo_uri')
+MONGO_DB_NAME = config['mongo_conf'].get('mongo_db_name')
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
