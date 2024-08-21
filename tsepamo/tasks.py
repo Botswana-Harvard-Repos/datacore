@@ -149,7 +149,7 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
                           for record in total_records[start:end]]
             chunk_data = get_project_records(project, record_ids)
             for record in chunk_data:
-                update_or_create_model(collection_name, record, file_fields)
+                update_or_create_model(project, collection_name, record, file_fields)
 
         # Send success email notification
         success_email = EmailMessage(
