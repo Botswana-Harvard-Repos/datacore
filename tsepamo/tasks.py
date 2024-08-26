@@ -113,8 +113,6 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
             {'$set': record},  # Update the record with new data
             upsert=True  # Create the record if it doesn't exist
             )
-
-                
     try:
         # Connect to REDCap
         project = Project(
@@ -158,6 +156,7 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
             for record in chunk_data:
                 print(f"Record id {record.get('record_id')}")
                 update_or_create_model(project, collection, record, file_fields)
+
 
         # Send success email notification
         success_email = EmailMessage(

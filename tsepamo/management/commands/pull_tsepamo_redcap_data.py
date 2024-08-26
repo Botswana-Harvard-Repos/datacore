@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from tsepamo.tasks import export_project_data_and_send_email
 
+
 project_models_map = {'tsepamo_1': 'tsepamo',
                       'tsepamo_2': 'tsepamo',
                       'tsepamo_3': 'tsepamo',
