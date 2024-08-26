@@ -12,6 +12,7 @@ from tsepamo.utils import LoadCSVData
 from .export_utils import GenerateDataExports
 from pymongo import MongoClient
 import os
+from celery.exceptions import SoftTimeLimitExceeded
 
 logger = logging.getLogger('celery_progress')
 REDCAP_API_KEYS = ast.literal_eval(settings.REDCAP_API_KEYS)
@@ -65,9 +66,10 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
     export_file.save()
 
 
-@shared_task
-def export_project_data_and_send_email(project_name, emails=[], collection_name=None):
-
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def export_project_data_and_send_email(self, project_name, emails=[], collection_name=None):
+    collection = db[collection_name]
+    
     def get_metadata(project):
         try:
             return project.export_metadata()
@@ -91,21 +93,19 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
         except requests.exceptions.RequestException as e:
             print(f"Request error: {e}")
             time.sleep(5)  # Sleep for a bit before retrying
-            return []
-
-    def update_or_create_model(project, collection_name, record, file_fields):
+            return  None
+    def update_or_create_model(project, collection, record, file_fields):
         record_id = record['record_id']
-        collection = db[collection_name]
-
+    
         for field in file_fields:
             if field in record and record[field]:
                 file_content = download_file(project, record_id, field)
                 file_name = f"{record_id}_{field}.jpg"
                 file_path = os.path.join(settings.MEDIA_ROOT, file_name)
-
-                with open(file_path, 'wb') as f:
-                    f.write(file_content)
-                record[field] = file_path
+                if file_content is not None:
+                    with open(file_path, 'wb') as f:
+                        f.write(file_content)
+                    record[field] = file_path
 
         print(f"Create Record {record_id}")
         collection.update_one(
@@ -130,7 +130,7 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
 
         # Setup retry strategy
         retry_strategy = Retry(
-            total=10,  # Number of retries
+            total=20,  # Number of retries
             backoff_factor=10,  # Wait between retries
             # Retry on these status codes
             status_forcelist=[429, 500, 502, 503, 504],
@@ -142,14 +142,21 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
         http.mount("https://", adapter)
         http.mount("http://", adapter)
 
+        #retrieve mongodb records
+        all_records = collection.find({}, {'_id': 0, 'record_id': 1})
+        record_id_list = [record['record_id'] for record in all_records]
+
         # Export data in chunks
         for start in range(0, total_count, chunk_size):
             end = start + chunk_size
             record_ids = [record.get('record_id')
                           for record in total_records[start:end]]
+            record_ids= [rid for rid in record_ids if rid not in record_id_list]
             chunk_data = get_project_records(project, record_ids)
             for record in chunk_data:
-                update_or_create_model(project, collection_name, record, file_fields)
+                print(f"Record id {record.get('record_id')}")
+                update_or_create_model(project, collection, record, file_fields)
+
 
         # Send success email notification
         success_email = EmailMessage(
@@ -159,6 +166,13 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
             emails,
         )
         success_email.send()
+
+    except SoftTimeLimitExceeded:
+        self.update_state(state='FAILURE')
+        new_soft_time_limit = self.request.soft_time_limit + 3600
+        new_time_limit = self.request.time_limit + 3600
+        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
+    
     except Exception as e:
         # Log the error and send a failure notification email
         print(f"An error occurred: {e}")
