@@ -66,8 +66,8 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
     export_file.save()
 
 
-@shared_task
-def export_project_data_and_send_email(project_name, emails=[], collection_name=None):
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def export_project_data_and_send_email(self, project_name, emails=[], collection_name=None):
     collection = db[collection_name]
     
     def get_metadata(project):
@@ -167,6 +167,12 @@ def export_project_data_and_send_email(project_name, emails=[], collection_name=
             emails,
         )
         success_email.send()
+
+    except SoftTimeLimitExceeded:
+        self.update_state(state='FAILURE')
+        new_soft_time_limit = self.request.soft_time_limit + 3600
+        new_time_limit = self.request.time_limit + 3600
+        self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
     
     except Exception as e:
         # Log the error and send a failure notification email
