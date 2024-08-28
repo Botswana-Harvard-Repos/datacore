@@ -17,8 +17,15 @@ from celery.exceptions import SoftTimeLimitExceeded
 logger = logging.getLogger('celery_progress')
 REDCAP_API_KEYS = ast.literal_eval(settings.REDCAP_API_KEYS)
 
-client = MongoClient(settings.MONGO_URI)
-db = client[settings.MONGO_DB_NAME]
+_client = None
+
+
+def get_mongo_client():
+    global _client
+    if _client is None:
+        # Initialize the client only when it is needed
+        _client = MongoClient(settings.MONGO_URI)
+    return _client
 
 
 @shared_task()
@@ -68,13 +75,27 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
 
 @shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
 def export_project_data_and_send_email(self, project_name, emails=[], collection_name=None):
-    collection = db[collection_name]
-    
+
+    def update_field_variables(record):
+        field_mapping = {
+            'placental_organism': 'placenta_organism',
+            'placental_pcdecid': 'placenta_pcdecid',
+            'placental_avascvilli': 'placenta_avascvilli',
+            'placental_distalvh': 'placenta_distalvh',
+            'placental_fetalmalp': 'placenta_fetalmalp',
+            'was_this_woman_on_aspirin': 'was_this_woman_aspirin',
+            'surgery_describe': 'surgery_details',
+            'ipms_followup': 'imps_followup'
+        }
+
+        mapped_record = {field_mapping.get(k, k): v for k, v in record.items()}
+        return mapped_record
+
     def get_metadata(project):
         try:
             return project.export_metadata()
         except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
+            print(f'Request error: {e}')
             time.sleep(5)  # Sleep for a bit before retrying
             return []
 
@@ -82,7 +103,7 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
         try:
             return project.export_records(records=record_ids)
         except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
+            print(f'Request error: {e}')
             time.sleep(5)  # Sleep for a bit before retrying
             return []
 
@@ -91,12 +112,14 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
             content, _ = project.export_file(record_id, field_name)
             return content
         except requests.exceptions.RequestException as e:
-            print(f"Request error: {e}")
+            print(f'Request error: {e}')
             time.sleep(5)  # Sleep for a bit before retrying
-            return  None
+            return None
+
     def update_or_create_model(project, collection, record, file_fields):
+        record = update_field_variables(record)
         record_id = record['record_id']
-    
+
         for field in file_fields:
             if field in record and record[field]:
                 file_content = download_file(project, record_id, field)
@@ -107,7 +130,8 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
                         f.write(file_content)
                     record[field] = file_path
 
-        print(f"Create Record {record_id}")
+        print(f'Create/update record {record_id}')
+
         collection.update_one(
             {'record_id': record_id},  # Search for a record with this ID
             {'$set': record},  # Update the record with new data
@@ -142,21 +166,28 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
         http.mount("https://", adapter)
         http.mount("http://", adapter)
 
-        #retrieve mongodb records
+        print('Creating database connection...')
+        client = get_mongo_client()
+        db = client[settings.MONGO_DB_NAME]
+        collection = db[collection_name]
+
+        # retrieve mongodb records
         all_records = collection.find({}, {'_id': 0, 'record_id': 1})
         record_id_list = [record['record_id'] for record in all_records]
 
         # Export data in chunks
         for start in range(0, total_count, chunk_size):
             end = start + chunk_size
-            record_ids = [record.get('record_id')
-                          for record in total_records[start:end]]
-            record_ids= [rid for rid in record_ids if rid not in record_id_list]
+            record_ids = [record.get('record_id') for record in total_records[start:end]
+                          if record.get('record_id') not in record_id_list]
+
+            if not record_ids:
+                continue
+
             chunk_data = get_project_records(project, record_ids)
             for record in chunk_data:
                 print(f"Record id {record.get('record_id')}")
                 update_or_create_model(project, collection, record, file_fields)
-
 
         # Send success email notification
         success_email = EmailMessage(
@@ -172,7 +203,7 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
         new_soft_time_limit = self.request.soft_time_limit + 3600
         new_time_limit = self.request.time_limit + 3600
         self.retry(countdown=10, max_retries=3, soft_time_limit=new_soft_time_limit, time_limit=new_time_limit)
-    
+
     except Exception as e:
         # Log the error and send a failure notification email
         print(f"An error occurred: {e}")
