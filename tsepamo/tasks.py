@@ -73,7 +73,7 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
     export_file.save()
 
 
-@shared_task(bind=True, soft_time_limit=7000, time_limit=7200, max_retries=5, default_retry_delay=60)
+@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
 def export_project_data_and_send_email(self, project_name, emails=[], collection_name=None):
 
     def update_field_variables(record):
@@ -199,12 +199,12 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
         success_email.send()
 
     except SoftTimeLimitExceeded:
-
+        self.update_state(state='FAILURE')
         new_soft_time_limit = self.soft_time_limit + 3600
         new_time_limit = self.time_limit + 3600
         self.retry(
-            exc=SoftTimeLimitExceeded(),
             countdown=10,
+            max_retries=5,
             soft_time_limit=new_soft_time_limit,
             time_limit=new_time_limit)
 
