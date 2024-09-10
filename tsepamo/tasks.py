@@ -73,8 +73,8 @@ def generate_exports(export_name, user_created, user_emails=[], app_label='', ex
     export_file.save()
 
 
-@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
-def export_project_data_and_send_email(self, project_name, emails=[], collection_name=None):
+#@shared_task(bind=True, soft_time_limit=7000, time_limit=7200)
+def export_project_data_and_send_email(project_name, emails=[], collection_name=None):
 
     def update_field_variables(record):
         field_mapping = {
@@ -107,14 +107,14 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
             time.sleep(5)  # Sleep for a bit before retrying
             return []
 
-    def download_file(project, record_id, field_name):
+    """def download_file(project, record_id, field_name):
         try:
             content, _ = project.export_file(record_id, field_name)
             return content
         except requests.exceptions.RequestException as e:
             print(f'Request error: {e}')
             time.sleep(5)  # Sleep for a bit before retrying
-            return None
+            return None"""
 
     def update_or_create_model(project, collection, record, file_fields):
         record = update_field_variables(record)
@@ -122,13 +122,13 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
 
         for field in file_fields:
             if field in record and record[field]:
-                file_content = download_file(project, record_id, field)
+                #file_content = download_file(project, record_id, field)
                 file_name = f"{record_id}_{field}.jpg"
                 file_path = os.path.join(settings.MEDIA_ROOT, file_name)
-                if file_content is not None:
+                """if file_content is not None:
                     with open(file_path, 'wb') as f:
-                        f.write(file_content)
-                    record[field] = file_path
+                        f.write(file_content)"""
+                record[field] = file_path
 
         print(f'Create/update record {record_id}')
 
@@ -197,16 +197,6 @@ def export_project_data_and_send_email(self, project_name, emails=[], collection
             emails,
         )
         success_email.send()
-
-    except SoftTimeLimitExceeded:
-        self.update_state(state='FAILURE')
-        new_soft_time_limit = self.soft_time_limit + 3600
-        new_time_limit = self.time_limit + 3600
-        self.retry(
-            countdown=10,
-            max_retries=5,
-            soft_time_limit=new_soft_time_limit,
-            time_limit=new_time_limit)
 
     except Exception as e:
         # Log the error and send a failure notification email
